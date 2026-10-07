@@ -244,6 +244,7 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({
           <img
             src={article.featuredImage}
             alt={article.title}
+            decoding="async"
             className="w-full h-[320px] sm:h-[420px] object-cover"
           />
         </div>

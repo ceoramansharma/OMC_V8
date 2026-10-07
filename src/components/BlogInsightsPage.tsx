@@ -351,6 +351,8 @@ export const BlogInsightsPage: React.FC<BlogInsightsPageProps> = ({
                       <img
                         src={article.featuredImage}
                         alt={article.title}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs text-slate-800 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">

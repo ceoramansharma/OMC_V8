@@ -27,6 +27,7 @@ import { ContactModal } from './components/ContactModal';
 import { ContactPage } from './components/ContactPage';
 import { CustomPageView } from './components/CustomPageView';
 import { WhyTrustSection } from './components/WhyTrustSection';
+import { SkeletonScreen } from './components/SkeletonScreen';
 import { useSectionToggles } from './utils/themeContent';
 import { getPageBySlug } from './utils/customPagesStore';
 
@@ -109,6 +110,13 @@ export default function App({ isHeadlessMode = false }: AppProps) {
   const [isVisualBuilderOpen, setIsVisualBuilderOpen] = useState(false);
   const [isAdminUser, setIsAdminUser] = useState(false);
   const [, setStoreRevision] = useState(0);
+
+  // Layout stability & hydration sync
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('online-mmj-spa-mounted');
+    }
+  }, []);
 
   // -------------------------------------------------------------------------
   // Extended 'headless-mode' & WordPress Page Builder Live Save Listener
@@ -259,11 +267,6 @@ export default function App({ isHeadlessMode = false }: AppProps) {
     }, 3500);
     return () => clearTimeout(timer);
   }, [liveSyncToast]);
-
-  // If in headless-mode or page-builder canvas mode, safely render empty null to prevent any clashing
-  if (isHeadlessActive) {
-    return null;
-  }
 
   // Sync route with competitor URL pattern
   useEffect(() => {
@@ -431,8 +434,22 @@ export default function App({ isHeadlessMode = false }: AppProps) {
     transitionTo(`/${slug}/`, { type: 'custom-page', slug });
   };
 
+  // If in headless-mode or page-builder canvas mode, safely render empty null to prevent any clashing
+  if (isHeadlessActive) {
+    return null;
+  }
+
+  // Check for skeleton testing query parameter (?skeleton=1 or ?loading=1)
+  const isForceSkeleton = typeof window !== 'undefined' && 
+    (new URLSearchParams(window.location.search).get('skeleton') === '1' || 
+     new URLSearchParams(window.location.search).get('loading') === '1');
+
+  if (isForceSkeleton) {
+    return <SkeletonScreen statusText="Connecting to board-certified MMJ doctors..." />;
+  }
+
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col antialiased selection:bg-emerald-100 selection:text-emerald-900 font-sans">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col antialiased selection:bg-emerald-100 selection:text-emerald-900 font-sans online-mmj-spa-loaded">
       
       {/* Top Header & Sticky Navigation (Rendered on standard pages; book route has its own dedicated focused clinic header) */}
       {currentRoute.type !== 'book' && (
