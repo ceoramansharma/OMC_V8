@@ -887,6 +887,157 @@ if (!function_exists('online_mmj_is_valid_app_route')) {
     }
 }
 
+/**
+ * Generate Dynamic XML Sitemap prioritizing Primary Keywords
+ */
+if (!function_exists('online_mmj_generate_dynamic_xml_sitemap')) {
+    function online_mmj_generate_dynamic_xml_sitemap() {
+        $base = home_url();
+        $today = date('Y-m-d');
+        
+        $urls = array();
+        
+        // 1. Home Page (Priority 1.0)
+        $urls[] = array(
+            'loc' => home_url('/'),
+            'priority' => '1.0',
+            'changefreq' => 'daily'
+        );
+
+        // 2. Primary Keyword Services (Priority 0.90)
+        $services = array(
+            'new-patient-medical-marijuana-card',
+            'medical-marijuana-card-renewal',
+            '99-plant-cultivation-recommendation',
+            'emotional-support-animal-letter',
+            'book-evaluation'
+        );
+        foreach ($services as $srv) {
+            $urls[] = array(
+                'loc' => home_url('/' . $srv . '/'),
+                'priority' => '0.90',
+                'changefreq' => 'weekly'
+            );
+        }
+
+        // 3. Primary Keyword States (Priority 0.95)
+        $states = array(
+            'california', 'new-york', 'florida', 'pennsylvania', 'ohio',
+            'oklahoma', 'missouri', 'connecticut', 'texas', 'georgia',
+            'illinois', 'maryland', 'virginia', 'massachusetts', 'michigan',
+            'minnesota', 'arizona', 'new-jersey', 'colorado', 'nevada',
+            'washington', 'maine', 'oregon', 'utah', 'louisiana',
+            'new-mexico', 'rhode-island', 'delaware', 'hawaii', 'arkansas',
+            'new-hampshire', 'west-virginia', 'mississippi', 'alabama', 'kentucky', 'iowa'
+        );
+        foreach ($states as $st) {
+            $urls[] = array(
+                'loc' => home_url('/medical-marijuana-card-' . $st . '/'),
+                'priority' => '0.95',
+                'changefreq' => 'weekly'
+            );
+        }
+
+        // 4. Primary Keyword Cities (Priority 0.85)
+        $cities = array(
+            'los-angeles', 'san-diego', 'san-francisco', 'sacramento', 'san-jose',
+            'fresno', 'oakland', 'bakersfield', 'anaheim', 'riverside',
+            'stockton', 'irvine', 'chula-vista', 'fremont', 'san-bernardino',
+            'modesto', 'fontana', 'moreno-valley', 'glendale',
+            'miami', 'orlando', 'tampa', 'jacksonville',
+            'new-york-city', 'buffalo', 'rochester',
+            'philadelphia', 'pittsburgh',
+            'columbus', 'cleveland', 'cincinnati'
+        );
+        foreach ($cities as $ct) {
+            $urls[] = array(
+                'loc' => home_url('/medical-marijuana-card-' . $ct . '/'),
+                'priority' => '0.85',
+                'changefreq' => 'weekly'
+            );
+        }
+
+        // 5. Primary Keyword Qualifying Conditions (Priority 0.80)
+        $conditions = array(
+            'chronic-pain', 'anxiety-ptsd', 'insomnia-sleep', 'cancer-chemo',
+            'epilepsy-seizures', 'multiple-sclerosis', 'arthritis-joint',
+            'migraines-headaches', 'ibd-crohns', 'depression', 'autism-spectrum', 'glaucoma'
+        );
+        foreach ($conditions as $cond) {
+            $urls[] = array(
+                'loc' => home_url('/medical-marijuana-for-' . $cond . '/'),
+                'priority' => '0.80',
+                'changefreq' => 'monthly'
+            );
+        }
+
+        // 6. Clinical Articles & Blog Insights (Priority 0.75)
+        $urls[] = array(
+            'loc' => home_url('/medical-marijuana-insights/'),
+            'priority' => '0.80',
+            'changefreq' => 'daily'
+        );
+        $articles = array(
+            'medical-marijuana-card-vs-recreational-cannabis',
+            'how-to-talk-to-doctor-about-medical-marijuana',
+            'california-ab-2188-workplace-cannabis-rights',
+            'understanding-terpenes-cannabinoids-guide',
+            'medical-marijuana-travel-rules-state-reciprocity',
+            'cannabis-for-sleep-insomnia-science',
+            'medical-marijuana-for-seniors-aging-comfortably',
+            'rso-rick-simpson-oil-dosing-protocol'
+        );
+        foreach ($articles as $art) {
+            $urls[] = array(
+                'loc' => home_url('/' . $art . '/'),
+                'priority' => '0.75',
+                'changefreq' => 'weekly'
+            );
+        }
+
+        // 7. Contact Page (Priority 0.70)
+        $urls[] = array(
+            'loc' => home_url('/contact-us/'),
+            'priority' => '0.70',
+            'changefreq' => 'monthly'
+        );
+
+        // Include any published WordPress pages and posts dynamically
+        $wp_pages = get_posts(array(
+            'post_type' => array('page', 'post'),
+            'post_status' => 'publish',
+            'posts_per_page' => 100,
+            'fields' => 'ids'
+        ));
+        $existing_locs = array_column($urls, 'loc');
+        foreach ($wp_pages as $pid) {
+            $link = get_permalink($pid);
+            if (!in_array($link, $existing_locs, true)) {
+                $urls[] = array(
+                    'loc' => $link,
+                    'priority' => '0.80',
+                    'changefreq' => 'weekly'
+                );
+            }
+        }
+
+        // Build XML string
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
+        foreach ($urls as $u) {
+            $xml .= "  <url>\n";
+            $xml .= "    <loc>" . esc_url($u['loc']) . "</loc>\n";
+            $xml .= "    <lastmod>" . esc_html($today) . "</lastmod>\n";
+            $xml .= "    <changefreq>" . esc_html($u['changefreq']) . "</changefreq>\n";
+            $xml .= "    <priority>" . esc_html($u['priority']) . "</priority>\n";
+            $xml .= "  </url>\n";
+        }
+        $xml .= "</urlset>";
+
+        return $xml;
+    }
+}
+
 if (!function_exists('online_mmj_handle_virtual_app_routes')) {
     function online_mmj_handle_virtual_app_routes() {
         $raw_path = isset($_SERVER['REQUEST_URI']) ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : '';
@@ -919,6 +1070,14 @@ if (!function_exists('online_mmj_handle_virtual_app_routes')) {
 
         if (in_array($path, $short_states, true)) {
             wp_redirect(home_url('/medical-marijuana-card-' . $path . '/'), 301);
+            exit;
+        }
+
+        // Dynamic XML Sitemap for Search Engines
+        if ($path === 'sitemap.xml' || $path === 'sitemap') {
+            header('Content-Type: application/xml; charset=utf-8');
+            header('X-Robots-Tag: noindex, follow', true);
+            echo online_mmj_generate_dynamic_xml_sitemap();
             exit;
         }
 

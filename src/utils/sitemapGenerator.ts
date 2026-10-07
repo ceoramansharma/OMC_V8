@@ -1,6 +1,7 @@
 import { STATES_DATA, SERVICES_DATA, QUALIFYING_CONDITIONS } from '../data/mmjData';
 import { LOCAL_CITIES_DATA } from '../data/localSeoData';
 import { BLOG_ARTICLES_DATA } from '../data/blogArticlesData';
+import { getCustomPages, WordPressPage } from './customPagesStore';
 
 export interface SitemapEntry {
   url: string;
@@ -167,6 +168,43 @@ export function crawlAppRoutes(baseUrl = 'https://onlinemmjcard.com'): SitemapEn
       title: `⚡ AMP View: ${article.title}`,
       imageUrl: article.featuredImage
     });
+  });
+
+  // 9. Custom WordPress dynamic pages
+  const customPages = getCustomPages();
+  customPages.forEach((cp: WordPressPage) => {
+    const slug = cp.slug.replace(/^\/+|\/+$/g, '');
+    entries.push({
+      url: `${cleanBase}/${slug}/`,
+      path: `/${slug}/`,
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: 0.8,
+      category: 'Services',
+      title: `${cp.title} | Online MMJ Card`,
+    });
+  });
+
+  // Primary Keyword Prioritization:
+  // Sort entries so URLs containing high-ranking search keywords (e.g. medical-marijuana-card, new-patient, etc.)
+  // appear at the top with highest priority to maximize search engine indexation.
+  const keywordWeight = (path: string): number => {
+    let score = 0;
+    if (path === '/') return 1000;
+    if (path.includes('medical-marijuana-card-')) score += 100;
+    if (path.includes('new-patient')) score += 90;
+    if (path.includes('renewal')) score += 80;
+    if (path.includes('cultivation')) score += 70;
+    if (path.includes('medical-marijuana-for-')) score += 60;
+    if (path.includes('medical-marijuana-insights')) score += 50;
+    if (path.includes('book-evaluation')) score += 85;
+    return score;
+  };
+
+  entries.sort((a, b) => {
+    const weightDiff = keywordWeight(b.path) - keywordWeight(a.path);
+    if (weightDiff !== 0) return weightDiff;
+    return b.priority - a.priority;
   });
 
   return entries;

@@ -36,6 +36,17 @@ for (const file of assetFiles) {
 
 console.log(`Copied ${jsCount} JS bundle(s) and ${cssCount} CSS bundle(s) to theme assets.`);
 
+// Copy sitemap.xml and robots.txt to theme root
+const publicDir = path.join(rootDir, 'public');
+if (fs.existsSync(path.join(publicDir, 'sitemap.xml'))) {
+  fs.copyFileSync(path.join(publicDir, 'sitemap.xml'), path.join(themeDir, 'sitemap.xml'));
+  console.log('Copied dynamic sitemap.xml to theme root.');
+}
+if (fs.existsSync(path.join(publicDir, 'robots.txt'))) {
+  fs.copyFileSync(path.join(publicDir, 'robots.txt'), path.join(themeDir, 'robots.txt'));
+  console.log('Copied robots.txt to theme root.');
+}
+
 // Check required theme files
 const requiredFiles = ['style.css', 'index.php', 'front-page.php', 'header.php', 'footer.php', 'page.php', 'functions.php', 'screenshot.png'];
 let allPresent = true;

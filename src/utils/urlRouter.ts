@@ -13,6 +13,7 @@ export type AppRoute =
   | { type: 'blog'; viewMode?: 'standard' | 'speed' }
   | { type: 'article'; articleSlug: string; isAmp?: boolean }
   | { type: 'book'; stateId?: string; serviceId?: string }
+  | { type: 'sitemap' }
   | { type: 'custom-page'; slug: string };
 
 /**
@@ -94,11 +95,16 @@ export function getArticleUrl(slug: string, isAmp = false): string {
 
 /**
  * Parses current browser URL (both pathname and hash) into an AppRoute.
+ * Can also accept explicit pathname, search, and hash for canonical duplicate checks.
  */
-export function parseCurrentUrl(): AppRoute {
-  const rawPath = window.location.pathname.toLowerCase().replace(/\/+$/, '');
-  const rawHash = window.location.hash.toLowerCase().replace(/^#\/?/, '').replace(/\/+$/, '');
-  const searchParams = new URLSearchParams(window.location.search);
+export function parseCurrentUrl(explicitPath?: string, explicitSearch?: string, explicitHash?: string): AppRoute {
+  const pathname = explicitPath !== undefined ? explicitPath : (typeof window !== 'undefined' ? window.location.pathname : '/');
+  const search = explicitSearch !== undefined ? explicitSearch : (typeof window !== 'undefined' ? window.location.search : '');
+  const hash = explicitHash !== undefined ? explicitHash : (typeof window !== 'undefined' ? window.location.hash : '');
+
+  const rawPath = pathname.toLowerCase().replace(/\/+$/, '');
+  const rawHash = hash.toLowerCase().replace(/^#\/?/, '').replace(/\/+$/, '');
+  const searchParams = new URLSearchParams(search);
   const hashSearchParams = rawHash.includes('?') ? new URLSearchParams(rawHash.split('?')[1]) : null;
 
   const isAmpRequested = searchParams.get('amp') === '1' || (hashSearchParams && hashSearchParams.get('amp') === '1') || rawPath.endsWith('/amp') || rawHash.endsWith('/amp');
@@ -135,6 +141,11 @@ export function parseCurrentUrl(): AppRoute {
     return { type: 'contact' };
   }
 
+  // XML Sitemap Route
+  if (candidate === 'sitemap.xml' || candidate === 'sitemap') {
+    return { type: 'sitemap' };
+  }
+
   // 0. Book Evaluation Form (mymmjdoctor.com style)
   if (
     candidate === 'book' ||
@@ -143,7 +154,7 @@ export function parseCurrentUrl(): AppRoute {
     candidate.startsWith('book-evaluation') ||
     candidate.startsWith('book/')
   ) {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = searchParams;
     const stateParam = urlParams.get('state') || undefined;
     const serviceParam = urlParams.get('service') || undefined;
     return { type: 'book', stateId: stateParam, serviceId: serviceParam };
@@ -209,14 +220,22 @@ export function parseCurrentUrl(): AppRoute {
     target = candidate.replace('medical-marijuana-doctor-', '');
   } else if (candidate.startsWith('state/')) {
     target = candidate.replace('state/', '');
+  } else if (candidate.startsWith('states/')) {
+    target = candidate.replace('states/', '');
   } else if (candidate.startsWith('local/')) {
     target = candidate.replace('local/', '');
+  } else if (candidate.startsWith('locations/')) {
+    target = candidate.replace('locations/', '');
+  } else if (candidate.endsWith('-medical-marijuana-card')) {
+    target = candidate.replace(/-medical-marijuana-card$/, '');
+  } else if (candidate.endsWith('-mmj-card')) {
+    target = candidate.replace(/-mmj-card$/, '');
   }
 
   if (target) {
     // Check if target is a known state (e.g. massachusetts, california, florida, texas)
     const matchedState = STATES_DATA.find(
-      (s) => s.id === target || s.name.toLowerCase().replace(/\s+/g, '-') === target
+      (s) => s.id === target || s.code.toLowerCase() === target || s.name.toLowerCase().replace(/\s+/g, '-') === target
     );
     if (matchedState) {
       return { type: 'state', stateId: matchedState.id };
@@ -235,7 +254,7 @@ export function parseCurrentUrl(): AppRoute {
 
   // 5b. Direct state match (e.g. /california, /new-york, /florida)
   const directState = STATES_DATA.find(
-    (s) => s.id === candidate || s.name.toLowerCase().replace(/\s+/g, '-') === candidate
+    (s) => s.id === candidate || s.code.toLowerCase() === candidate || s.name.toLowerCase().replace(/\s+/g, '-') === candidate
   );
   if (directState) {
     return { type: 'state', stateId: directState.id };

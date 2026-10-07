@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Phone, Search, User, ChevronDown, Menu, X, ArrowRight, ShieldCheck, CheckCircle2, Settings, Mail, FileText } from 'lucide-react';
 import { STATES_DATA } from '../data/mmjData';
 import { useCustomPages } from '../utils/customPagesStore';
+import { MobileMenu } from './MobileMenu';
 
 interface HeaderProps {
   onOpenApply: (stateId?: string, serviceId?: string) => void;
@@ -491,17 +492,18 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          {/* Mobile Menu Hamburger */}
-          <div className="flex sm:hidden items-center gap-2">
+          {/* Mobile & Tablet Navigation Hamburger (< 1024px) */}
+          <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={() => onNavigateBook ? onNavigateBook() : onOpenApply()}
-              className="px-3.5 py-1.5 rounded-full text-xs font-black text-white bg-[#008f58]"
+              className="px-3.5 py-1.5 rounded-full text-xs font-black text-white bg-[#008f58] hover:bg-[#007a4a] transition-colors"
             >
               START
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-slate-700"
+              className="p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+              aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -510,116 +512,24 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white px-5 py-4 space-y-3">
-          <div className="grid grid-cols-2 gap-2 pb-3 border-b border-slate-100">
-            <button
-              onClick={() => { setMobileMenuOpen(false); onOpenApply(); }}
-              className="w-full py-2.5 bg-[#16a34a] text-white rounded-full text-xs font-extrabold uppercase text-center"
-            >
-              Start Evaluation
-            </button>
-            <button
-              onClick={() => { setMobileMenuOpen(false); onOpenPortal(); }}
-              className="w-full py-2.5 bg-slate-100 text-slate-800 rounded-full text-xs font-bold text-center"
-            >
-              Patient Portal
-            </button>
-          </div>
-
-          <div className="space-y-2 text-xs font-bold text-slate-700 uppercase tracking-wide">
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block py-2">
-              Three Simple Steps
-            </a>
-            <a href="#why-trust" onClick={() => setMobileMenuOpen(false)} className="block py-2">
-              Why Patients Trust Us
-            </a>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                if (onNavigateContact) {
-                  onNavigateContact();
-                } else if (onOpenContact) {
-                  onOpenContact();
-                } else {
-                  safeNavigate('/contact-us/');
-                }
-              }}
-              className="block w-full text-left py-2 text-slate-700 hover:text-[#16a34a] font-bold uppercase cursor-pointer"
-            >
-              Contact Us (Support Desk)
-            </button>
-            <a href="#conditions" onClick={() => setMobileMenuOpen(false)} className="block py-2">
-              Qualifying Conditions
-            </a>
-            <a href="#reviews" onClick={() => setMobileMenuOpen(false)} className="block py-2">
-              Patient Reviews
-            </a>
-            <a href="#medical-team" onClick={() => setMobileMenuOpen(false)} className="block py-2">
-              Our Medical Team
-            </a>
-
-            {/* Dynamically Linked WordPress Pages in Mobile Drawer */}
-            {navPages.length > 0 && (
-              <div className="pt-2 border-t border-slate-100 space-y-1">
-                <div className="text-[11px] font-bold text-[#16a34a] uppercase tracking-wider py-1">
-                  Custom Pages
-                </div>
-                {navPages.map((page) => (
-                  <button
-                    key={page.id}
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      if (onNavigateCustomPage) {
-                        onNavigateCustomPage(page.slug);
-                      } else {
-                        safeNavigate(`/${page.slug}/`);
-                      }
-                    }}
-                    className="block w-full text-left py-2 font-bold text-slate-800 hover:text-[#16a34a] cursor-pointer uppercase"
-                  >
-                    {page.title}
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            {/* Resources & Information Section */}
-            <div className="pt-2 border-t border-slate-100 space-y-1">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider py-1">
-                Resources & Information
-              </div>
-              <button 
-                onClick={() => { 
-                  setMobileMenuOpen(false); 
-                  safeNavigate('/medical-marijuana-insights/', onNavigateBlog);
-                }} 
-                className="block w-full text-left py-1.5 font-bold text-slate-800 hover:text-[#16a34a] cursor-pointer"
-              >
-                Medical Marijuana Insights (All Blogs)
-              </button>
-              <a href="#conditions" onClick={() => setMobileMenuOpen(false)} className="block py-1 text-slate-600">
-                Pre-Qualification Self-Check
-              </a>
-              <a href="#reciprocity" onClick={() => setMobileMenuOpen(false)} className="block py-1 text-slate-600">
-                State Reciprocity Checker
-              </a>
-              <a href="#benefits-comparison" onClick={() => setMobileMenuOpen(false)} className="block py-1 text-slate-600">
-                Dispensary Tax Calculator
-              </a>
-              <a href="#faqs" onClick={() => setMobileMenuOpen(false)} className="block py-1 text-slate-600">
-                Frequently Asked Questions
-              </a>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-slate-500">Need help?</span>
-            <a href="tel:8884206789" className="font-extrabold text-[#16a34a]">(888) 420-6789</a>
-          </div>
-        </div>
-      )}
+      {/* Dedicated Responsive Mobile Menu Drawer Component */}
+      <MobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        onOpenApply={onOpenApply}
+        onOpenPortal={onOpenPortal}
+        onOpenContact={onOpenContact}
+        onNavigateHome={onNavigateHome}
+        onNavigateCity={onNavigateCity}
+        onNavigateState={onNavigateState}
+        onNavigateService={onNavigateService}
+        onNavigateCondition={onNavigateCondition}
+        onNavigateBlog={onNavigateBlog}
+        onNavigateArticle={onNavigateArticle}
+        onNavigateBook={onNavigateBook}
+        onNavigateContact={onNavigateContact}
+        onNavigateCustomPage={onNavigateCustomPage}
+      />
 
     </header>
   );

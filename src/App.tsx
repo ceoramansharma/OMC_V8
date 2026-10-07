@@ -58,6 +58,7 @@ import {
 import { applySEOMeta, getRouteSEOMeta } from './utils/seoMeta';
 import { MyMMJDoctorEvaluationForm } from './components/MyMMJDoctorEvaluationForm';
 import { LeadManagerModal } from './components/LeadManagerModal';
+import { SitemapModal } from './components/SitemapModal';
 import { ThemeVisualBuilder } from './components/ThemeVisualBuilder';
 import { 
   getCityBySlug, 
@@ -170,11 +171,49 @@ export default function App({ isHeadlessMode = false }: AppProps) {
         e.data === 'et_builder_saved'
       ) {
         handleBuilderSaveCommit('Divi Builder');
-      } else if (e.data?.type === 'page-builder-saved') {
+      } else if (
+        e.data?.type === 'gutenberg:saved' ||
+        e.data?.action === 'wp_editor_saved' ||
+        e.data?.name === 'wp-editor-saved' ||
+        e.data?.type === 'core/editor:savePost'
+      ) {
+        handleBuilderSaveCommit('Gutenberg Editor');
+      } else if (
+        e.data?.action === 'fl_builder_saved' ||
+        e.data?.type === 'fl-builder-saved'
+      ) {
+        handleBuilderSaveCommit('Beaver Builder');
+      } else if (
+        e.data?.type === 'page-builder-saved' ||
+        e.data?.type === 'headless:save-complete' ||
+        e.data?.action === 'wp_save_complete'
+      ) {
         handleBuilderSaveCommit(e.data?.source || 'Page Builder');
       }
     };
     window.addEventListener('message', onMessage);
+
+    // B2. Gutenberg Core Block Editor Live State Subscriber (if wp.data is active)
+    let wpUnsubscribe: (() => void) | null = null;
+    try {
+      const wpData = (window as any).wp?.data || (window.parent as any)?.wp?.data;
+      if (wpData?.subscribe && wpData?.select) {
+        let wasSavingPost = false;
+        wpUnsubscribe = wpData.subscribe(() => {
+          try {
+            const isSaving = wpData.select('core/editor')?.isSavingPost?.() || false;
+            if (wasSavingPost && !isSaving) {
+              handleBuilderSaveCommit('Gutenberg Block Editor');
+            }
+            wasSavingPost = isSaving;
+          } catch (err) {
+            // ignore
+          }
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
 
     // C. Cross-tab BroadcastChannel listener
     let broadcastChannel: BroadcastChannel | null = null;
@@ -205,6 +244,9 @@ export default function App({ isHeadlessMode = false }: AppProps) {
       window.removeEventListener('storage', onStorage);
       if (broadcastChannel) {
         broadcastChannel.close();
+      }
+      if (wpUnsubscribe) {
+        wpUnsubscribe();
       }
     };
   }, []);
@@ -634,6 +676,19 @@ export default function App({ isHeadlessMode = false }: AppProps) {
             onNavigateHome={handleNavigateHome}
             onOpenApply={handleOpenApply}
           />
+        )}
+
+        {/* Dynamic XML Sitemap Full-Page Interactive Generator */}
+        {currentRoute.type === 'sitemap' && (
+          <div className="py-12 px-4 max-w-5xl mx-auto min-h-[60vh]">
+            <SitemapModal
+              isOpen={true}
+              onClose={handleNavigateHome}
+              onNavigateHome={handleNavigateHome}
+              onNavigateBlog={handleNavigateBlog}
+              onNavigateArticle={handleNavigateArticle}
+            />
+          </div>
         )}
 
         {/* Dynamic WordPress Custom Pages (CRUD Managed) */}

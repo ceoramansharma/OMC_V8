@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { StateInfo } from '../data/mmjData';
 import { LOCAL_CITIES_DATA } from '../data/localSeoData';
-import { STATE_DETAILED_DOSSIERS } from '../data/stateDetailedContent';
+import { STATE_DETAILED_DOSSIERS, getStateDossier } from '../data/stateDetailedContent';
 import { 
   MapPin, ShieldCheck, CheckCircle2, ArrowRight, DollarSign, 
   Clock, FileText, ChevronRight, Sprout, ExternalLink, HelpCircle, 
-  Scale, Building, AlertCircle, Sparkles, ChevronDown 
+  Scale, Building, AlertCircle, Sparkles, ChevronDown, Store 
 } from 'lucide-react';
 
 interface StateDetailPageProps {
@@ -30,43 +30,41 @@ export const StateDetailPage: React.FC<StateDetailPageProps> = ({
 
   // Find local cities for this state
   const citiesInState = LOCAL_CITIES_DATA.filter((c) => c.stateId === stateData.id);
-  const dossier = STATE_DETAILED_DOSSIERS[stateData.id];
+  const dossier = getStateDossier(stateData);
 
   const toggleFaq = (idx: number) => {
     setActiveFaq(activeFaq === idx ? null : idx);
   };
 
-  // Generate fallback FAQs if not in specific dossier
-  const faqsToDisplay = dossier?.stateFaqs || [
-    {
-      question: `How do I get a medical marijuana card in ${stateData.name}?`,
-      answer: `To get certified in ${stateData.name}, complete our secure 5-minute online intake form, connect with our state-certified medical marijuana doctor for a 15-minute video consultation, and once approved, receive your official signed medical cannabis recommendation on the same day.`
-    },
-    {
-      question: `How long is a ${stateData.name} medical marijuana card valid?`,
-      answer: `In ${stateData.name}, medical marijuana certifications are typically valid for ${stateData.validity}, after which a routine online recertification check-in is required to maintain legal dispensary privileges.`
-    },
-    {
-      question: `What are the legal possession limits for medical patients in ${stateData.name}?`,
-      answer: `Under ${stateData.name} law, certified patients can legally purchase and possess ${stateData.possessionLimit}. Medical patients enjoy significantly higher possession limits and lower tax rates than adult-use consumers.`
-    },
-    {
-      question: `Can I grow cannabis at home in ${stateData.name}?`,
-      answer: `${stateData.homeCultivation}`
-    },
-    {
-      question: `What is the state registry fee in ${stateData.name}?`,
-      answer: `The state registry fee in ${stateData.name} is ${stateData.stateRegistryFee}. Our doctor consultation fee is separate and covers your full evaluation and ongoing physician support.`
-    },
-    {
-      question: `What happens if the doctor does not approve my condition?`,
-      answer: `We provide a 100% Money-Back Guarantee. If our licensed physician determines that medical cannabis is not suitable for your condition, you receive a full refund with zero cancellation fees.`
-    }
-  ];
+  const faqsToDisplay = dossier.stateFaqs;
 
   return (
     <div className="bg-white min-h-screen text-slate-800">
       
+      {/* Schema.org MedicalWebPage Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "MedicalWebPage",
+            "name": `${stateData.name} Medical Marijuana Card & Telehealth Evaluation Guide`,
+            "url": `https://onlinemmjcard.com/medical-marijuana-card-${stateData.id.toLowerCase()}/`,
+            "description": dossier.detailedIntro.split('\n\n')[0] || stateData.summary,
+            "about": {
+              "@type": "MedicalCondition",
+              "name": "Qualifying Medical Conditions for Cannabis Recommendation"
+            },
+            "mainEntity": {
+              "@type": "MedicalBusiness",
+              "name": `Online MMJ Card - ${stateData.name} Telehealth Clinic`,
+              "telephone": "(888) 420-6789",
+              "priceRange": `$${stateData.price}`
+            }
+          })
+        }}
+      />
+
       {/* Top Breadcrumb Navigation */}
       <div className="bg-slate-50 border-b border-slate-200 py-3 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center flex-wrap gap-2">
@@ -407,6 +405,55 @@ export const StateDetailPage: React.FC<StateDetailPageProps> = ({
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Dispensary Acceptance & Purchasing Rules */}
+      {dossier?.dispensaryGuide && (
+        <section className="py-16 bg-white border-b border-slate-200">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div className="text-center space-y-2">
+              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700">Dispensary Access</div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                {dossier.dispensaryGuide.title}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
+                {dossier.dispensaryGuide.description}
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-6">
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-3">
+                <div className="text-xs font-bold uppercase text-slate-900 flex items-center gap-2">
+                  <Store className="w-4 h-4 text-[#16a34a]" />
+                  <span>Licensed Dispensary Chains</span>
+                </div>
+                <div className="space-y-1.5 text-xs text-slate-700">
+                  {dossier.dispensaryGuide.topChains.map((chain, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#16a34a] shrink-0" />
+                      <span>{chain}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-3">
+                <div className="text-xs font-bold uppercase text-slate-900 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#16a34a]" />
+                  <span>Purchasing Rules & Verification</span>
+                </div>
+                <div className="space-y-1.5 text-xs text-slate-700">
+                  {dossier.dispensaryGuide.purchasingRules.map((rule, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#16a34a] shrink-0 mt-0.5" />
+                      <span>{rule}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>

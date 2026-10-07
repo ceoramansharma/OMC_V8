@@ -59,9 +59,24 @@ export function getAllCities(): LocalCityData[] {
 }
 
 export function getCityBySlug(slug: string): LocalCityData | undefined {
-  const base = LOCAL_CITIES_DATA.find((c) => c.slug === slug);
+  if (!slug) return undefined;
+  const clean = slug.toLowerCase().trim().replace(/^medical-marijuana-card-/, '').replace(/^medical-marijuana-doctor-/, '');
+  const cleanNoState = clean.replace(/-[a-z]{2}$/i, '');
+
+  const base = LOCAL_CITIES_DATA.find((c) => {
+    const cClean = c.slug.toLowerCase().replace(/-[a-z]{2}$/i, '');
+    const cName = c.cityName.toLowerCase().replace(/\s+/g, '-');
+    return (
+      c.slug.toLowerCase() === slug.toLowerCase() ||
+      c.slug.toLowerCase() === clean ||
+      cClean === clean ||
+      cClean === cleanNoState ||
+      cName === clean ||
+      cName === cleanNoState
+    );
+  });
   if (!base) return undefined;
-  const override = cachedOverrides.cities[slug];
+  const override = cachedOverrides.cities[base.slug] || cachedOverrides.cities[slug];
   return override ? { ...base, ...override } : base;
 }
 
@@ -73,9 +88,28 @@ export function getAllStates(): StateInfo[] {
 }
 
 export function getStateById(stateId: string): StateInfo | undefined {
-  const base = STATES_DATA.find((s) => s.id === stateId);
+  if (!stateId) return undefined;
+  const clean = stateId.toLowerCase().trim().replace(/^medical-marijuana-card-/, '').replace(/^medical-marijuana-doctor-/, '').replace(/^state\//, '');
+  const cleanHyphen = clean.replace(/\s+/g, '-');
+
+  const base = STATES_DATA.find((s) => {
+    const sId = s.id.toLowerCase();
+    const sCode = s.code.toLowerCase();
+    const sNameHyphen = s.name.toLowerCase().replace(/\s+/g, '-');
+    const sNameClean = s.name.toLowerCase().replace(/[^a-z]/g, '');
+    const cleanAlpha = clean.replace(/[^a-z]/g, '');
+    return (
+      sId === clean ||
+      sId === cleanHyphen ||
+      sCode === clean ||
+      sNameHyphen === clean ||
+      sNameHyphen === cleanHyphen ||
+      sNameClean === cleanAlpha ||
+      clean.startsWith(sId)
+    );
+  });
   if (!base) return undefined;
-  const override = cachedOverrides.states[stateId];
+  const override = cachedOverrides.states[base.id] || cachedOverrides.states[stateId];
   return override ? { ...base, ...override } : base;
 }
 
@@ -87,9 +121,29 @@ export function getAllServices(): ServiceItem[] {
 }
 
 export function getServiceById(serviceId: string): ServiceItem | undefined {
-  const base = SERVICES_DATA.find((s) => s.id === serviceId);
-  if (!base) return undefined;
-  const override = cachedOverrides.services[serviceId];
+  if (!serviceId) return undefined;
+  const clean = serviceId.toLowerCase().trim().replace(/^service\//, '');
+  const base = SERVICES_DATA.find((s) => {
+    const sId = s.id.toLowerCase();
+    return sId === clean || (clean === 'renewal' && sId === 'renewal') || (clean === 'cultivation' && sId === 'cultivation') || (clean === 'esa-letter' && sId === 'esa-letter');
+  });
+  if (!base) {
+    // Check known service slugs
+    if (clean === 'medical-marijuana-card-renewal' || clean === 'renewal') {
+      return SERVICES_DATA.find((s) => s.id === 'renewal');
+    }
+    if (clean === '99-plant-cultivation-recommendation' || clean === 'cultivation') {
+      return SERVICES_DATA.find((s) => s.id === 'cultivation');
+    }
+    if (clean === 'emotional-support-animal-letter' || clean === 'esa-letter' || clean === 'esa') {
+      return SERVICES_DATA.find((s) => s.id === 'esa-letter');
+    }
+    if (clean === 'new-patient-medical-marijuana-card' || clean === 'new-patient') {
+      return SERVICES_DATA.find((s) => s.id === 'new-patient');
+    }
+    return SERVICES_DATA[0];
+  }
+  const override = cachedOverrides.services[base.id] || cachedOverrides.services[serviceId];
   return override ? { ...base, ...override } : base;
 }
 
@@ -101,9 +155,15 @@ export function getAllConditions(): ConditionItem[] {
 }
 
 export function getConditionById(conditionId: string): ConditionItem | undefined {
-  const base = QUALIFYING_CONDITIONS.find((c) => c.id === conditionId);
+  if (!conditionId) return undefined;
+  const clean = conditionId.toLowerCase().trim().replace(/^condition\//, '').replace(/^medical-marijuana-for-/, '');
+  const base = QUALIFYING_CONDITIONS.find((c) => {
+    const cId = c.id.toLowerCase();
+    const cName = c.name.toLowerCase().replace(/\s+/g, '-');
+    return cId === clean || cId === clean.replace(/-+/g, '-') || cName.includes(clean);
+  });
   if (!base) return undefined;
-  const override = cachedOverrides.conditions[conditionId];
+  const override = cachedOverrides.conditions[base.id] || cachedOverrides.conditions[conditionId];
   return override ? { ...base, ...override } : base;
 }
 

@@ -55,8 +55,9 @@ export const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({
   };
 
   // Find related articles
+  const relatedIds = article.relatedArticleIds || [];
   const relatedArticles = BLOG_ARTICLES_DATA.filter(
-    (a) => article.relatedArticleIds.includes(a.id) || article.relatedArticleIds.includes(a.slug)
+    (a) => relatedIds.includes(a.id) || relatedIds.includes(a.slug)
   ).slice(0, 3);
 
   // If Speed / AMP mode is active, render ultra-lightweight AMP component

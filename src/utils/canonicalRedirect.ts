@@ -51,6 +51,8 @@ export function getPrimaryKeywordCanonicalPath(route: AppRoute): string {
     }
     case 'contact':
       return getContactUrl();
+    case 'sitemap':
+      return '/sitemap.xml';
     case 'custom-page':
       return `/${route.slug.replace(/^\/+|\/+$/g, '')}/`;
     case 'home':
@@ -76,10 +78,28 @@ export function detectDuplicateContent(
   const lowerPath = rawPath.toLowerCase();
   const trimmedPath = lowerPath.replace(/^\/+|\/+$/g, '');
 
+  // Check if WordPress page builder edit/preview canvas is active - do NOT redirect editor
+  const lowerSearch = rawSearch.toLowerCase();
+  const isPageBuilderEditor = 
+    lowerSearch.includes('elementor') || 
+    lowerSearch.includes('preview=true') || 
+    lowerSearch.includes('et_fb=1') || 
+    lowerSearch.includes('headless');
+
+  if (isPageBuilderEditor) {
+    const route = parseCurrentUrl(rawPath, rawSearch, rawHash);
+    const canonicalPath = getPrimaryKeywordCanonicalPath(route);
+    return {
+      isDuplicate: false,
+      canonicalPath,
+      canonicalUrl: `${origin}${canonicalPath}${rawSearch}`,
+    };
+  }
+
   // 1. Detect duplicate hash routing (e.g. /#/medical-marijuana-card-ca or /path/#/path)
   const cleanHash = rawHash.replace(/^#\/?/, '').replace(/\/+$/, '').toLowerCase();
   if (cleanHash && (cleanHash === trimmedPath || trimmedPath.endsWith(cleanHash))) {
-    const route = parseCurrentUrl();
+    const route = parseCurrentUrl(rawPath, rawSearch, rawHash);
     const canonicalPath = getPrimaryKeywordCanonicalPath(route);
     return {
       isDuplicate: true,
@@ -102,8 +122,18 @@ export function detectDuplicateContent(
     };
   }
 
-  // Parse current route to identify intended page
-  const route = parseCurrentUrl();
+  // 3b. Detect sitemap route variants (e.g. /sitemap, /sitemap/)
+  if (trimmedPath === 'sitemap' || trimmedPath === 'sitemap.xml') {
+    return {
+      isDuplicate: rawPath !== '/sitemap.xml',
+      canonicalPath: '/sitemap.xml',
+      canonicalUrl: `${origin}/sitemap.xml`,
+      reason: rawPath !== '/sitemap.xml' ? 'Sitemap variant redirected to /sitemap.xml' : undefined,
+    };
+  }
+
+  // Parse current route to identify intended page using rawPath, rawSearch, rawHash
+  const route = parseCurrentUrl(rawPath, rawSearch, rawHash);
   const canonicalPath = getPrimaryKeywordCanonicalPath(route);
   const canonicalPathNoQuery = canonicalPath.split('?')[0];
 

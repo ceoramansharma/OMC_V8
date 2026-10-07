@@ -229,7 +229,7 @@ export const MyMMJDoctorEvaluationForm: React.FC<MyMMJDoctorEvaluationFormProps>
                 <label className="block text-xs sm:text-sm font-semibold text-slate-800">
                   Select Evaluation State
                 </label>
-                {isAutoDetected ? (
+                {isAutoDetected && currentState ? (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#008f58] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                     <MapPin className="w-3 h-3" />
                     <span>Auto-Detected ({currentState.code})</span>
