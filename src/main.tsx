@@ -50,13 +50,13 @@ export function checkIsPageBuilderOrHeadlessMode(): boolean {
 
 const isHeadlessOrBuilder = checkIsPageBuilderOrHeadlessMode();
 
-if (!isHeadlessOrBuilder) {
-  const container = document.getElementById('online-mmj-card-root') || document.getElementById('root');
-  if (container) {
-    // When React mounts, add marker class to body so fallback PHP header/footer are cleanly suppressed via CSS
+const container = document.getElementById('online-mmj-card-root') || document.getElementById('root');
+if (container) {
+  if (!isHeadlessOrBuilder) {
+    // When React mounts in full SPA mode, add marker class to body so fallback PHP header/footer are cleanly suppressed via CSS
     document.body.classList.add('online-mmj-spa-active');
-
-    createRoot(container).render(<App isHeadlessMode={false} />);
   }
+
+  createRoot(container).render(<App isHeadlessMode={isHeadlessOrBuilder} />);
 }
 

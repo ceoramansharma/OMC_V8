@@ -243,3 +243,68 @@ function online_mmj_trust_badges_shortcode() {
     return ob_get_clean();
 }
 add_shortcode('mmj_trust_badges', 'online_mmj_trust_badges_shortcode');
+
+/**
+ * 8. Live Real-Time Page Builder Save Event Broadcaster
+ * Notifies the React application and preview canvases when Elementor, Divi,
+ * or the Gutenberg editor finishes saving, so live edits are reflected immediately.
+ */
+function online_mmj_builder_live_save_script() {
+    ?>
+    <script>
+    (function() {
+        function notifySaveCommit(source) {
+            var detail = { source: source || 'wordpress-builder', timestamp: Date.now() };
+            window.dispatchEvent(new CustomEvent('wp-page-builder-saved', { detail: detail }));
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'elementor:saved', name: 'elementor:saved', action: 'builder_saved', detail: detail }, '*');
+                }
+                if (typeof BroadcastChannel !== 'undefined') {
+                    var ch = new BroadcastChannel('online-mmj-builder');
+                    ch.postMessage({ type: 'page-builder-saved', source: source, timestamp: Date.now() });
+                }
+            } catch(e) {}
+        }
+
+        // 1. Elementor Editor Save Hooks
+        if (typeof window !== 'undefined' && window.elementor) {
+            try {
+                window.elementor.on('document:save:commit', function() { notifySaveCommit('elementor'); });
+            } catch(e) {}
+        }
+        document.addEventListener('elementor/document/saved', function() { notifySaveCommit('elementor'); });
+
+        // 2. Divi Visual Builder Save Hooks
+        window.addEventListener('et_builder_saved', function() { notifySaveCommit('divi'); });
+        window.addEventListener('message', function(e) {
+            if (e.data && (e.data.action === 'et_pb_saved' || e.data.action === 'et_fb_saved' || e.data === 'et_builder_saved')) {
+                notifySaveCommit('divi');
+            }
+        });
+
+        // 3. Gutenberg Block Editor Save Hooks
+        if (typeof window !== 'undefined' && window.wp && window.wp.data && window.wp.data.subscribe) {
+            var isSaving = false;
+            try {
+                window.wp.data.subscribe(function() {
+                    var editor = window.wp.data.select('core/editor');
+                    if (editor && editor.isSavingPost) {
+                        var currentlySaving = editor.isSavingPost();
+                        if (isSaving && !currentlySaving) {
+                            notifySaveCommit('gutenberg');
+                        }
+                        isSaving = currentlySaving;
+                    }
+                });
+            } catch(e) {}
+        }
+    })();
+    </script>
+    <?php
+}
+add_action('wp_footer', 'online_mmj_builder_live_save_script', 99);
+add_action('admin_footer', 'online_mmj_builder_live_save_script', 99);
+if (did_action('elementor/loaded')) {
+    add_action('elementor/editor/footer', 'online_mmj_builder_live_save_script', 99);
+}

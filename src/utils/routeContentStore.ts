@@ -46,6 +46,11 @@ function saveOverrides(overrides: RouteContentOverrides) {
 
 let cachedOverrides = loadOverrides();
 
+export function reloadRouteContentOverrides(): RouteContentOverrides {
+  cachedOverrides = loadOverrides();
+  return cachedOverrides;
+}
+
 export function getAllCities(): LocalCityData[] {
   return LOCAL_CITIES_DATA.map((city) => {
     const override = cachedOverrides.cities[city.slug];

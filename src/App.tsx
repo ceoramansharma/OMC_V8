@@ -64,10 +64,12 @@ import {
   getStateById, 
   getServiceById, 
   getConditionById, 
-  getArticleBySlug 
+  getArticleBySlug,
+  reloadRouteContentOverrides
 } from './utils/routeContentStore';
 import { applyDynamicRouteSchema } from './utils/schemaStore';
 import { applyThemeStyles } from './utils/themeStyles';
+import { enforceCanonicalRedirect, detectDuplicateContent } from './utils/canonicalRedirect';
 
 interface AppProps {
   isHeadlessMode?: boolean;
@@ -93,14 +95,9 @@ export default function App({ isHeadlessMode = false }: AppProps) {
     );
   })();
 
-  // If in headless-mode or page-builder canvas mode, safely render empty null/portal to prevent any clashing
-  if (isHeadlessActive) {
-    return null;
-  }
-
   const [currentRoute, setCurrentRoute] = useState<AppRoute>({ type: 'home' });
   const { toggles } = useSectionToggles();
-
+  const [liveSyncToast, setLiveSyncToast] = useState<{ message: string; timestamp: number } | null>(null);
 
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -112,14 +109,119 @@ export default function App({ isHeadlessMode = false }: AppProps) {
   const [isAdminUser, setIsAdminUser] = useState(false);
   const [, setStoreRevision] = useState(0);
 
-  // Subscribe to real-time content changes from Visual Builder Editor panel
+  // -------------------------------------------------------------------------
+  // Extended 'headless-mode' & WordPress Page Builder Live Save Listener
+  // -------------------------------------------------------------------------
+  // When Elementor, Divi, Gutenberg, or any WordPress Page Builder finishes saving,
+  // trigger real-time data refetch and component re-render without a hard browser refresh.
   useEffect(() => {
-    const handleStoreUpdate = () => {
+    const handleBuilderSaveCommit = (sourceName?: string) => {
+      // 1. Refetch & reload route content overrides from localStorage/API
+      reloadRouteContentOverrides();
+
+      // 2. Re-apply global dynamic theme styles
+      applyThemeStyles();
+
+      // 3. Re-apply SEO Schema structured data
+      const freshRoute = parseCurrentUrl();
+      applyDynamicRouteSchema(freshRoute);
+
+      // 4. Trigger state re-render in React SPA without a hard refresh
       setStoreRevision((prev) => prev + 1);
+      setCurrentRoute(freshRoute);
+
+      // 5. Notify user/editor of live synchronized changes
+      setLiveSyncToast({
+        message: `Live edits synchronized with WordPress ${sourceName || 'Page Builder'}`,
+        timestamp: Date.now(),
+      });
+
+      // 6. Broadcast event back to WordPress editor canvas if inside iframe
+      try {
+        if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'online-mmj:preview-refreshed', timestamp: Date.now() }, '*');
+        }
+      } catch (e) {
+        // ignore
+      }
     };
-    window.addEventListener('route-content-updated', handleStoreUpdate);
-    return () => window.removeEventListener('route-content-updated', handleStoreUpdate);
+
+    // A. Custom DOM events dispatched by WordPress theme scripts
+    const onWpBuilderSaved = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail;
+      handleBuilderSaveCommit(detail?.source ? `${detail.source}` : 'Page Builder');
+    };
+    window.addEventListener('wp-page-builder-saved', onWpBuilderSaved);
+    window.addEventListener('route-content-updated', () => handleBuilderSaveCommit('Visual Customizer'));
+
+    // B. Window postMessage listener (Elementor / Divi / Gutenberg iframe communication)
+    const onMessage = (e: MessageEvent) => {
+      if (!e.data) return;
+      if (
+        e.data?.name === 'elementor:saved' ||
+        e.data?.type === 'elementor/editor/saved' ||
+        e.data === 'elementor:saved' ||
+        e.data?.action === 'elementor_saved'
+      ) {
+        handleBuilderSaveCommit('Elementor');
+      } else if (
+        e.data?.action === 'et_pb_saved' ||
+        e.data?.action === 'et_fb_saved' ||
+        e.data === 'et_builder_saved'
+      ) {
+        handleBuilderSaveCommit('Divi Builder');
+      } else if (e.data?.type === 'page-builder-saved') {
+        handleBuilderSaveCommit(e.data?.source || 'Page Builder');
+      }
+    };
+    window.addEventListener('message', onMessage);
+
+    // C. Cross-tab BroadcastChannel listener
+    let broadcastChannel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        broadcastChannel = new BroadcastChannel('online-mmj-builder');
+        broadcastChannel.onmessage = (e) => {
+          if (e.data?.type === 'page-builder-saved') {
+            handleBuilderSaveCommit(e.data?.source || 'Page Builder');
+          }
+        };
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // D. Storage event listener (syncs across tabs when page builder saves localStorage)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key && (e.key.startsWith('online_mmj_') || e.key === 'wp_live_edit')) {
+        handleBuilderSaveCommit('Storage Sync');
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('wp-page-builder-saved', onWpBuilderSaved);
+      window.removeEventListener('message', onMessage);
+      window.removeEventListener('storage', onStorage);
+      if (broadcastChannel) {
+        broadcastChannel.close();
+      }
+    };
   }, []);
+
+  // Auto-dismiss live synchronization notification toast
+  useEffect(() => {
+    if (!liveSyncToast) return;
+    const timer = setTimeout(() => {
+      setLiveSyncToast(null);
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [liveSyncToast]);
+
+  // If in headless-mode or page-builder canvas mode, safely render empty null to prevent any clashing
+  if (isHeadlessActive) {
+    return null;
+  }
 
   // Sync route with competitor URL pattern
   useEffect(() => {
@@ -185,6 +287,14 @@ export default function App({ isHeadlessMode = false }: AppProps) {
 
   // Dynamically update Canonical URL, Meta Description, OpenGraph tags, and JSON-LD schema
   useEffect(() => {
+    // Detect duplicate content and automatically redirect to primary keyword URL
+    const redirectResult = enforceCanonicalRedirect(currentRoute);
+    if (redirectResult.redirected) {
+      const freshRoute = parseCurrentUrl();
+      setCurrentRoute(freshRoute);
+      return;
+    }
+
     const meta = getRouteSEOMeta(currentRoute);
     applySEOMeta(meta);
     applyDynamicRouteSchema(currentRoute);
@@ -619,6 +729,14 @@ export default function App({ isHeadlessMode = false }: AppProps) {
             <span className="w-2.5 h-2.5 rounded-full bg-[#16a34a] animate-pulse" />
             <span>{isVisualBuilderOpen ? 'Close Editor' : '✏️ Visual Theme Builder'}</span>
           </button>
+        </div>
+      )}
+
+      {/* Live Sync Notification Toast from WordPress Page Builder Saves */}
+      {liveSyncToast && (
+        <div className="fixed bottom-24 right-6 z-50 flex items-center gap-2.5 bg-slate-900/95 text-emerald-300 border border-emerald-500/50 shadow-2xl px-4 py-2.5 rounded-full text-xs font-bold backdrop-blur-md transition-all animate-in fade-in slide-in-from-bottom-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+          <span>{liveSyncToast.message}</span>
         </div>
       )}
 
