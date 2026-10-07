@@ -206,13 +206,16 @@ a:hover {
   width: 100%;
 }
 
-/* Prevent duplicate static WordPress PHP header, banner, or footer ONLY when React SPA is actively mounted on pure front page */
+/* Prevent duplicate static WordPress PHP header, banner, progress bar, or footer ONLY when React SPA is actively mounted on pure front page */
+body.online-mmj-spa-active > .online-mmj-static-progress,
 body.online-mmj-spa-active > .online-mmj-static-banner,
 body.online-mmj-spa-active > .online-mmj-static-header,
 body.online-mmj-spa-active > .online-mmj-static-footer,
 body.online-mmj-spa-active > .mmj-breadcrumbs,
 body.online-mmj-spa-active > header.site-header,
-body.online-mmj-spa-active > footer.site-footer {
+body.online-mmj-spa-active > header.online-mmj-header,
+body.online-mmj-spa-active > footer.site-footer,
+body.online-mmj-spa-active #mmj-scroll-progress {
   display: none !important;
 }
 

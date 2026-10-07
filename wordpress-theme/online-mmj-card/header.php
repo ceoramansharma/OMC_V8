@@ -119,7 +119,7 @@
 <?php wp_body_open(); ?>
 
 <!-- Slim Progress Bar Scroll Indicator -->
-<div id="mmj-scroll-progress" class="w-full h-[3.5px] bg-[#0f5132] overflow-hidden sticky top-0 z-50 pointer-events-none" role="progressbar" aria-label="Page reading progress">
+<div id="mmj-scroll-progress" class="online-mmj-static-progress w-full h-[3.5px] bg-[#0f5132] overflow-hidden sticky top-0 z-50 pointer-events-none" role="progressbar" aria-label="Page reading progress">
   <div id="mmj-scroll-bar" class="h-full bg-gradient-to-r from-emerald-300 via-lime-300 to-white transition-[width] duration-150 ease-out shadow-[0_0_8px_rgba(110,231,183,0.9)]" style="width: 0%;"></div>
 </div>
 
@@ -148,10 +148,10 @@
 <?php
 // Semantic Header & Dynamic Menus
 ?>
-<header class="online-mmj-header sticky top-0 z-40 bg-white shadow-xs border-b border-slate-100">
+<header class="online-mmj-header online-mmj-static-header site-header sticky top-0 z-40 bg-white shadow-xs border-b border-slate-100">
   
   <!-- Top Announcement Bar -->
-  <div class="bg-[#15803d] text-white text-xs py-2 px-4 font-medium tracking-wide">
+  <div class="online-mmj-static-banner bg-[#15803d] text-white text-xs py-2 px-4 font-medium tracking-wide">
     <div class="max-w-7xl mx-auto flex items-center justify-between text-center sm:text-left">
       <div class="flex items-center gap-2 mx-auto sm:mx-0">
         <span class="inline-block w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>

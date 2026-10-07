@@ -18,7 +18,7 @@ $all_states_list = array(
 );
 ?>
 
-<footer id="colophon" class="site-footer bg-[#0f172a] text-slate-300 pt-16 pb-12 border-t border-slate-800 text-xs">
+<footer id="colophon" class="site-footer online-mmj-static-footer bg-[#0f172a] text-slate-300 pt-16 pb-12 border-t border-slate-800 text-xs">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     
     <!-- 4-Column Dynamic Widgets Grid (Editable via WP Admin > Appearance > Widgets) -->

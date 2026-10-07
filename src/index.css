@@ -6,14 +6,16 @@
     scroll-behavior: smooth;
   }
 
-  /* Prevent duplicate static WordPress PHP header, banner, or footer when React SPA is mounted */
-  body:has(#online-mmj-card-root) > .online-mmj-static-banner,
-  body:has(#online-mmj-card-root) > .online-mmj-static-header,
-  body:has(#online-mmj-card-root) > .online-mmj-static-footer,
-  body:has(#online-mmj-card-root) > .mmj-breadcrumbs,
-  body:has(#online-mmj-card-root) > header:not(#online-mmj-card-root header),
-  body:has(#online-mmj-card-root) > div.bg-\[\#15803d\]:not(#online-mmj-card-root div),
-  body:has(#online-mmj-card-root) > footer:not(#online-mmj-card-root footer) {
+  /* Prevent duplicate static WordPress PHP header, banner, progress bar, or footer when React SPA is mounted */
+  body.online-mmj-spa-active > .online-mmj-static-progress,
+  body.online-mmj-spa-active > .online-mmj-static-banner,
+  body.online-mmj-spa-active > .online-mmj-static-header,
+  body.online-mmj-spa-active > .online-mmj-static-footer,
+  body.online-mmj-spa-active > .mmj-breadcrumbs,
+  body.online-mmj-spa-active > header.online-mmj-header,
+  body.online-mmj-spa-active > header.site-header,
+  body.online-mmj-spa-active > footer.site-footer,
+  body.online-mmj-spa-active #mmj-scroll-progress {
     display: none !important;
   }
 

@@ -86,11 +86,10 @@ export default function App({ isHeadlessMode = false }: AppProps) {
       params.get('headless') === '1' ||
       params.get('headless') === 'true' ||
       search.includes('elementor-preview') ||
+      params.get('action') === 'elementor' ||
       search.includes('et_fb=1') ||
-      search.includes('et_pb_preview=true') ||
       document.body.classList.contains('elementor-editor-active') ||
-      document.body.classList.contains('et-fb') ||
-      document.body.classList.contains('wp-admin')
+      document.body.classList.contains('et-fb')
     );
   })();
 

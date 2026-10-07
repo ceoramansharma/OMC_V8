@@ -10,19 +10,17 @@
 
 get_header();
 
-// Determine if the page contains authored content from Gutenberg, Elementor, or Divi
-$has_page_builder_content = false;
-if (have_posts()) {
-    while (have_posts()) {
-        the_post();
-        if (trim(get_the_content()) !== '') {
-            $has_page_builder_content = true;
-        }
-    }
-    rewind_posts();
-}
+// Determine if the page is actively being edited or authored in Elementor or Divi builder canvas
+$post_id = get_the_ID();
+$is_elementor_active = class_exists('\Elementor\Plugin') && (
+    \Elementor\Plugin::$instance->editor->is_edit_mode() ||
+    \Elementor\Plugin::$instance->preview->is_preview_mode() ||
+    (get_post_meta($post_id, '_elementor_edit_mode', true) === 'builder')
+);
+$is_divi_active = (function_exists('et_core_is_fb_enabled') && et_core_is_fb_enabled()) ||
+    (get_post_meta($post_id, '_et_pb_use_builder', true) === 'on');
 
-if ($has_page_builder_content) : ?>
+if ($is_elementor_active || $is_divi_active) : ?>
   <!-- Render Page Builder & Gutenberg Authored Layout -->
   <main id="main-content" class="site-main front-page-builder-canvas" style="width:100%; min-height:60vh; padding:0; margin:0;">
     <?php

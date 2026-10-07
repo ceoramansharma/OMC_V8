@@ -43,38 +43,36 @@ $price         = get_post_meta(get_the_ID(), '_mmj_consult_price', true) ?: '$39
   </div>
 </div>
 
-<main id="main-content" class="site-main state-guide-template py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <?php
-    // Standard WordPress loop executing the_content() for Page Builders & Gutenberg
-    while (have_posts()) :
-      the_post();
-      $content = get_the_content();
-      ?>
-      <article id="post-<?php the_ID(); ?>" <?php post_class('entry-state-page'); ?>>
-        <div class="entry-content">
-          <?php 
-          if (!empty(trim($content))) {
-              the_content();
-          } elseif (function_exists('online_mmj_get_state_fallback_html')) {
-              echo online_mmj_get_state_fallback_html(get_the_ID());
-          } else {
-              the_content();
-          }
-          ?>
-        </div>
-
-        <?php
-        wp_link_pages(array(
-          'before' => '<div class="page-links text-center py-4 font-bold">' . esc_html__('Pages:', 'online-mmj-card'),
-          'after'  => '</div>',
-        ));
-        ?>
-      </article>
-      <?php
-    endwhile;
+<main id="main-content" class="site-main state-guide-template">
+  <?php
+  // Standard WordPress loop executing the_content() for Page Builders & Gutenberg
+  while (have_posts()) :
+    the_post();
+    $content = get_the_content();
     ?>
-  </div>
+    <article id="post-<?php the_ID(); ?>" <?php post_class('entry-state-page'); ?>>
+      <div class="entry-content">
+        <?php 
+        if (!empty(trim($content))) {
+            the_content();
+        } elseif (function_exists('online_mmj_get_state_fallback_html')) {
+            echo online_mmj_get_state_fallback_html(get_the_ID());
+        } else {
+            the_content();
+        }
+        ?>
+      </div>
+
+      <?php
+      wp_link_pages(array(
+        'before' => '<div class="page-links text-center py-4 font-bold">' . esc_html__('Pages:', 'online-mmj-card'),
+        'after'  => '</div>',
+      ));
+      ?>
+    </article>
+    <?php
+  endwhile;
+  ?>
 </main>
 
 <?php
