@@ -206,17 +206,13 @@ a:hover {
   width: 100%;
 }
 
-/* Prevent duplicate static WordPress PHP header, banner, or footer when React SPA is mounted */
-.online-mmj-static-banner,
-.online-mmj-static-header,
-.online-mmj-static-footer,
-body:has(#online-mmj-card-root) > .online-mmj-static-banner,
-body:has(#online-mmj-card-root) > .online-mmj-static-header,
-body:has(#online-mmj-card-root) > .online-mmj-static-footer,
-body:has(#online-mmj-card-root) > .mmj-breadcrumbs,
-body:has(#online-mmj-card-root) > header:not(#online-mmj-card-root header),
-body:has(#online-mmj-card-root) > div.bg-\[\#15803d\]:not(#online-mmj-card-root div),
-body:has(#online-mmj-card-root) > footer:not(#online-mmj-card-root footer) {
+/* Prevent duplicate static WordPress PHP header, banner, or footer ONLY when React SPA is actively mounted on pure front page */
+body.online-mmj-spa-active > .online-mmj-static-banner,
+body.online-mmj-spa-active > .online-mmj-static-header,
+body.online-mmj-spa-active > .online-mmj-static-footer,
+body.online-mmj-spa-active > .mmj-breadcrumbs,
+body.online-mmj-spa-active > header.site-header,
+body.online-mmj-spa-active > footer.site-footer {
   display: none !important;
 }
 
@@ -224,6 +220,240 @@ noscript .online-mmj-static-banner,
 noscript .online-mmj-static-header,
 noscript .online-mmj-static-footer {
   display: block !important;
+}
+
+/* ==========================================================================
+   Universal Page Builder & Editor Component Classes (Elementor, Divi, Gutenberg)
+   ========================================================================== */
+.mmj-hero-section {
+  padding: 2.5rem 1rem 3.5rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 50%, #ffffff 100%);
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mmj-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .mmj-hero-grid {
+    grid-template-columns: 7fr 5fr;
+  }
+}
+
+.mmj-badge-emerald {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.mmj-metric-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.mmj-practice-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
+  padding: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .mmj-practice-card {
+    padding: 2rem;
+  }
+}
+
+.mmj-stats-proof-bar {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 2rem 1rem;
+}
+
+.mmj-stats-proof-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .mmj-stats-proof-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.mmj-feature-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.mmj-dispensary-tag {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1rem 0.75rem;
+  text-align: center;
+}
+
+.mmj-step-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+}
+
+.mmj-pricing-card {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mmj-pricing-card.featured {
+  border-color: #16a34a;
+  position: relative;
+  box-shadow: 0 10px 15px -3px rgba(22,163,74,0.1);
+}
+
+.mmj-condition-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.mmj-faq-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.mmj-faq-question {
+  width: 100%;
+  text-align: left;
+  padding: 1.25rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+
+.mmj-faq-question:hover {
+  color: #16a34a;
+}
+
+.mmj-faq-answer {
+  padding: 0 1.5rem 1.25rem;
+  font-size: 0.8125rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.mmj-review-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);
+}
+
+.mmj-cta-banner {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  border-radius: 1.5rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+/* Buttons */
+.mmj-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  background-color: #008f58;
+  color: #ffffff !important;
+  font-size: 0.8125rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 0.75rem;
+  text-decoration: none !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 143, 88, 0.25);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.mmj-btn-primary:hover {
+  background-color: #007a4a;
+  box-shadow: 0 6px 12px -2px rgba(0, 143, 88, 0.35);
+  transform: translateY(-1px);
+}
+
+.mmj-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background-color: #f1f5f9;
+  color: #1e293b !important;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 0.75rem;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+}
+
+.mmj-btn-secondary:hover {
+  background-color: #e2e8f0;
+  color: #0f172a !important;
 }
 
 /* WordPress Admin Bar Compatibility: ensure sticky header and top banner are not hidden under admin bar */

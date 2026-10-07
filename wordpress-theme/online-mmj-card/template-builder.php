@@ -13,29 +13,27 @@
 get_header();
 ?>
 
-<div id="online-mmj-card-root">
-    <main id="main-content" class="site-main builder-evaluation-template" style="width:100%; min-height:60vh; padding:0; margin:0;">
-        <?php
-        while (have_posts()) :
-            the_post();
-            ?>
-            <div class="builder-custom-content">
-                <?php the_content(); ?>
-            </div>
-            <?php
-            wp_link_pages(array(
-                'before' => '<div class="page-links text-center py-4">' . esc_html__('Pages:', 'online-mmj-card'),
-                'after'  => '</div>',
-            ));
-        endwhile;
+<main id="main-content" class="site-main builder-evaluation-template" style="width:100%; min-height:60vh; padding:0; margin:0;">
+    <?php
+    while (have_posts()) :
+        the_post();
         ?>
-
-        <!-- Embedded Interactive Evaluation Form (Optional dynamic shortcode hook) -->
-        <div class="max-w-4xl mx-auto px-4 py-8">
-            <?php echo do_shortcode('[mmj_evaluation_form]'); ?>
+        <div class="builder-custom-content">
+            <?php the_content(); ?>
         </div>
-    </main>
-</div>
+        <?php
+        wp_link_pages(array(
+            'before' => '<div class="page-links text-center py-4">' . esc_html__('Pages:', 'online-mmj-card'),
+            'after'  => '</div>',
+        ));
+    endwhile;
+    ?>
+
+    <!-- Embedded Interactive Evaluation Form (Optional dynamic shortcode hook) -->
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <?php echo do_shortcode('[mmj_evaluation_form]'); ?>
+    </div>
+</main>
 
 <?php
 get_footer();

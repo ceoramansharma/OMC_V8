@@ -51,39 +51,46 @@ $lng           = get_post_meta(get_the_ID(), '_mmj_geo_lng', true) ?: '-118.2437
 }
 </script>
 
-<div id="online-mmj-card-root">
-  <!-- Breadcrumb Navigation for SEO Hierarchy -->
-  <div class="bg-slate-50 border-b border-slate-200 py-3 text-xs text-slate-500">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <?php online_mmj_breadcrumbs(); ?>
-    </div>
+<!-- Breadcrumb Navigation for SEO Hierarchy -->
+<div class="bg-slate-50 border-b border-slate-200 py-3 text-xs text-slate-500">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <?php online_mmj_breadcrumbs(); ?>
   </div>
-
-  <main id="main-content" class="site-main local-city-template py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <?php
-      // Standard WordPress loop executing the_content() for Page Builders & Gutenberg
-      while (have_posts()) :
-        the_post();
-        ?>
-        <article id="post-<?php the_ID(); ?>" <?php post_class('entry-location-page'); ?>>
-          <div class="entry-content">
-            <?php the_content(); ?>
-          </div>
-
-          <?php
-          wp_link_pages(array(
-            'before' => '<div class="page-links text-center py-4 font-bold">' . esc_html__('Pages:', 'online-mmj-card'),
-            'after'  => '</div>',
-          ));
-          ?>
-        </article>
-        <?php
-      endwhile;
-      ?>
-    </div>
-  </main>
 </div>
+
+<main id="main-content" class="site-main local-city-template py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <?php
+    // Standard WordPress loop executing the_content() for Page Builders & Gutenberg
+    while (have_posts()) :
+      the_post();
+      $content = get_the_content();
+      ?>
+      <article id="post-<?php the_ID(); ?>" <?php post_class('entry-location-page'); ?>>
+        <div class="entry-content">
+          <?php 
+          if (!empty(trim($content))) {
+              the_content();
+          } elseif (function_exists('online_mmj_get_city_fallback_html')) {
+              echo online_mmj_get_city_fallback_html(get_the_ID());
+          } else {
+              the_content();
+          }
+          ?>
+        </div>
+
+        <?php
+        wp_link_pages(array(
+          'before' => '<div class="page-links text-center py-4 font-bold">' . esc_html__('Pages:', 'online-mmj-card'),
+          'after'  => '</div>',
+        ));
+        ?>
+      </article>
+      <?php
+    endwhile;
+    ?>
+  </div>
+</main>
 
 <?php
 get_footer();

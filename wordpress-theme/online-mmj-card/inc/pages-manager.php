@@ -403,8 +403,21 @@ function online_mmj_get_default_cities() {
 function online_mmj_get_cities() {
     $defaults = online_mmj_get_default_cities();
     $saved = get_option('online_mmj_custom_cities', array());
-    if (!is_array($saved)) return $defaults;
-    return array_merge($defaults, $saved);
+    $merged = is_array($saved) ? array_merge($defaults, $saved) : $defaults;
+
+    $final = array();
+    foreach ($merged as $k => $c) {
+        $clean_k = preg_replace('/^medical-marijuana-card-/', '', $k);
+        $clean_k = preg_replace('/-(ca|fl|ny|pa|oh)$/i', '', $clean_k);
+        $canonical_key = 'medical-marijuana-card-' . $clean_k;
+        $c['slug'] = $canonical_key;
+        $final[$canonical_key] = $c;
+        $final[$clean_k] = $c; // alias
+        if (!empty($c['stateCode'])) {
+            $final[$clean_k . '-' . strtolower($c['stateCode'])] = $c; // alias e.g. fresno-ca
+        }
+    }
+    return $final;
 }
 
 /**
@@ -586,8 +599,20 @@ function online_mmj_get_default_states() {
 function online_mmj_get_states() {
     $defaults = online_mmj_get_default_states();
     $saved = get_option('online_mmj_custom_states', array());
-    if (!is_array($saved)) return $defaults;
-    return array_merge($defaults, $saved);
+    $merged = is_array($saved) ? array_merge($defaults, $saved) : $defaults;
+
+    $final = array();
+    foreach ($merged as $k => $s) {
+        $clean_k = preg_replace('/^medical-marijuana-card-/', '', $k);
+        $canonical_key = 'medical-marijuana-card-' . $clean_k;
+        $s['slug'] = $canonical_key;
+        $final[$canonical_key] = $s;
+        $final[$clean_k] = $s; // alias e.g. california
+        if (!empty($s['code'])) {
+            $final[strtolower($s['code'])] = $s; // alias e.g. ca
+        }
+    }
+    return $final;
 }
 
 /**
@@ -1168,6 +1193,663 @@ function online_mmj_get_default_posts() {
  * 1-Click Complete Synchronization of ALL Core Pages & Posts
  * Creates real, editable WordPress Pages and Blog Posts in wp-admin
  */
+/**
+ * Generate Full, Rich, Beautiful HTML for Local City Landing Pages
+ * Matches Design.png pixel-for-pixel and remains 100% editable in Elementor, Divi, and Gutenberg.
+ */
+function online_mmj_generate_city_html($ct) {
+    $city        = esc_html($ct['cityName']);
+    $state       = esc_html($ct['stateName']);
+    $code        = esc_html($ct['stateCode']);
+    $phone       = esc_html(!empty($ct['localPhone']) ? $ct['localPhone'] : '(888) 420-6789');
+    $price       = esc_html(!empty($ct['price']) ? $ct['price'] : '$39.99');
+    $subheading  = esc_html($ct['subheading']);
+    $savings     = esc_html(!empty($ct['taxSavings']) ? $ct['taxSavings'] : 'Up to 34.5%');
+    $rec_tax     = esc_html(!empty($ct['recTax']) ? $ct['recTax'] : 'State Excise + Sales + Local Business Tax');
+    $med_tax     = esc_html(!empty($ct['medTax']) ? $ct['medTax'] : 'Exempt from local sales tax with physician recommendation');
+    $disp        = esc_html(!empty($ct['dispensaries']) ? $ct['dispensaries'] : 'Valid at all licensed dispensaries across ' . $city . ' and surrounding areas.');
+
+    $areas = array(
+        $city . ' Downtown & Arts District',
+        $city . ' Metro & Midtown',
+        $city . ' North Suburbs',
+        $city . ' Westside & Hills',
+        $city . ' South County Corridor',
+        $city . ' Surrounding Regional Area',
+    );
+
+    ob_start();
+    ?>
+    <!-- HERO SECTION (Matches Design.png) -->
+    <section class="mmj-hero-section" style="padding: 40px 16px 56px; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 60%, #ffffff 100%); border-bottom: 1px solid #f1f5f9; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; align-items: center;">
+        
+        <!-- Left Column -->
+        <div>
+          <div class="mmj-badge-emerald" style="display: inline-flex; align-items: center; gap: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px;">
+            <span>&#9679; Dedicated Telehealth Clinic &middot; Serving <?php echo $city; ?>, <?php echo $code; ?></span>
+          </div>
+
+          <h1 style="font-size: 38px; line-height: 1.15; font-weight: 900; color: #0f172a; margin: 0 0 16px; letter-spacing: -0.5px;">
+            Online Medical Marijuana Doctor in <span style="color: #16a34a;"><?php echo $city; ?></span>
+          </h1>
+
+          <p style="font-size: 16px; line-height: 1.6; color: #475569; margin: 0 0 24px;">
+            Connect directly with our board-certified cannabis physicians from the comfort of your home. We provide 100% online telehealth evaluations, medical cannabis renewals, and same-day digital recommendations with zero office visits required.
+          </p>
+
+          <!-- Metrics Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+              <div style="font-size: 11px; color: #64748b; font-weight: 700;">Consultation Type</div>
+              <div style="font-size: 14px; font-weight: 900; color: #0f172a;">100% Online Telehealth</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+              <div style="font-size: 11px; color: #64748b; font-weight: 700;">Recommendation</div>
+              <div style="font-size: 14px; font-weight: 900; color: #16a34a;">Same-Day Digital PDF</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+              <div style="font-size: 11px; color: #64748b; font-weight: 700;">Dispensary Tax Savings</div>
+              <div style="font-size: 14px; font-weight: 900; color: #d97706;"><?php echo $savings; ?></div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+            <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="background: #008f58; color: #fff; padding: 14px 28px; border-radius: 12px; font-size: 13px; font-weight: 900; text-transform: uppercase; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,143,88,0.3);">
+              <span>Book <?php echo $city; ?> Doctor Evaluation</span>
+              <span>&rarr;</span>
+            </a>
+            <a href="#pricing" class="mmj-btn-secondary" style="background: #f1f5f9; color: #1e293b; padding: 14px 24px; border-radius: 12px; font-size: 13px; font-weight: 800; text-transform: uppercase; text-decoration: none; display: inline-flex; align-items: center; border: 1px solid #e2e8f0;">
+              <span>Renew Existing Card</span>
+            </a>
+          </div>
+
+          <!-- Trust Badges Under Buttons -->
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; font-size: 12px; color: #475569; font-weight: 700;">
+            <span style="display: inline-flex; align-items: center; gap: 4px; color: #15803d;">&#10003; 100% HIPAA Compliant</span>
+            <span>&middot;</span>
+            <span style="display: inline-flex; align-items: center; gap: 4px; color: #15803d;">&#10003; 15-Min Video / Phone Call</span>
+            <span>&middot;</span>
+            <span style="display: inline-flex; align-items: center; gap: 4px; color: #15803d;">&#10003; 100% Money-Back Guarantee</span>
+          </div>
+        </div>
+
+        <!-- Right Column: Practice Care Card (Matches Design.png) -->
+        <div>
+          <div class="mmj-practice-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08); padding: 28px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 48px; height: 48px; border-radius: 14px; background: #dcfce7; color: #15803d; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                  &#x2695;
+                </div>
+                <div>
+                  <h3 style="font-size: 16px; font-weight: 900; color: #0f172a; margin: 0;">Direct Telehealth Care</h3>
+                  <div style="font-size: 12px; color: #64748b;"><?php echo $state; ?> Licensed Physicians</div>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Consultation Fee</div>
+                <div style="font-size: 24px; font-weight: 900; color: #16a34a;"><?php echo $price; ?></div>
+              </div>
+            </div>
+
+            <!-- Bullet Points -->
+            <div style="display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: #475569; margin-bottom: 20px;">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="color: #16a34a; font-weight: 900;">&#10003;</span>
+                <div><strong style="color: #0f172a;">100% Online Telemedicine:</strong> No physical office visit required. Meet with our physician from home anywhere in <?php echo $city; ?> via phone or laptop.</div>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="color: #16a34a; font-weight: 900;">&#10003;</span>
+                <div><strong style="color: #0f172a;">Board-Certified Doctors:</strong> Consult directly with our experienced medical doctors registered with the state medical board.</div>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="color: #16a34a; font-weight: 900;">&#10003;</span>
+                <div><strong style="color: #0f172a;">Patient Care Line:</strong> <a href="tel:8884206789" style="color: #16a34a; font-weight: 800; text-decoration: underline;"><?php echo $phone; ?></a> (Toll-Free Patient Support)</div>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="color: #16a34a; font-weight: 900;">&#10003;</span>
+                <div><strong style="color: #0f172a;">Telehealth Hours:</strong> Mon &ndash; Sun: 8:00 AM &ndash; 10:00 PM</div>
+              </div>
+            </div>
+
+            <!-- Tax Alert Card -->
+            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 14px; margin-bottom: 20px; font-size: 12px; color: #92400e; line-height: 1.5;">
+              <strong style="color: #78350f; display: block; margin-bottom: 4px;">&dollar; Estimated Annual Savings in <?php echo $city; ?>:</strong>
+              Our patients save an estimated <strong>$1,250+ per year</strong> in state and municipal taxes compared to adult-use recreational retail.
+            </div>
+
+            <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="display: block; width: 100%; text-align: center; background: #008f58; color: #fff; padding: 14px; border-radius: 12px; font-size: 13px; font-weight: 900; text-transform: uppercase; text-decoration: none; box-sizing: border-box;">
+              Start Online 420 Evaluation &rarr;
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TRUST STATS BAR -->
+    <section class="mmj-stats-proof-bar" style="background: #0f172a; color: #ffffff; padding: 32px 16px; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; text-align: center;">
+        <div>
+          <div style="font-size: 30px; font-weight: 900; color: #34d399;">250,000+</div>
+          <div style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Approved Patients</div>
+        </div>
+        <div>
+          <div style="font-size: 30px; font-weight: 900; color: #34d399;">99.4%</div>
+          <div style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Doctor Approval Rate</div>
+        </div>
+        <div>
+          <div style="font-size: 30px; font-weight: 900; color: #34d399;">15 Minutes</div>
+          <div style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Average Consultation</div>
+        </div>
+        <div>
+          <div style="font-size: 30px; font-weight: 900; color: #34d399;">100% Free</div>
+          <div style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 4px;">If Not Approved Guarantee</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- IN-DEPTH CLINICAL & LEGAL OVERVIEW -->
+    <section style="padding: 64px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1000px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h2 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0 0 10px;">Why Patients in <?php echo $city; ?> Choose a Medical Marijuana Card</h2>
+          <p style="font-size: 15px; color: #64748b; margin: 0;">While adult-use retail stores exist in certain regions, obtaining an official medical cannabis recommendation from our physicians provides significant financial, legal, and clinical therapeutic protections.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+          <div class="mmj-feature-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+            <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 8px;">1. Substantial Dispensary Tax Exemptions in <?php echo $city; ?></h3>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin: 0;">Recreational buyers face cumulative retail taxes: <strong><?php echo $rec_tax; ?></strong>. With medical status, you receive: <strong><?php echo $med_tax; ?></strong>. Save hundreds each year.</p>
+          </div>
+          <div class="mmj-feature-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+            <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 8px;">2. Higher Potency Formulations & Clinical Strengths</h3>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin: 0;">Recreational dispensaries cap THC potency. Certified medical patients can purchase high-potency clinical formulations, concentrated RSO, and high-dose therapeutic tinctures.</p>
+          </div>
+          <div class="mmj-feature-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+            <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 8px;">3. Age 18+ Access and Legal Caregiver Recognition</h3>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin: 0;">Adults aged 18 to 20 can be legally certified by our doctors to purchase and consume medical cannabis. Designated caregiver cards can also be issued for family assistance.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINANCIAL TAX SAVINGS CALCULATOR -->
+    <section style="padding: 64px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #16a34a; letter-spacing: 0.5px; margin-bottom: 6px;">Financial Savings Calculator</div>
+        <h2 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0 0 8px;">Calculate Your Tax Savings in <?php echo $city; ?></h2>
+        <p style="font-size: 14px; color: #64748b; margin: 0 0 32px;">See how much you save with our physician recommendation compared to adult-use recreational retail taxes.</p>
+
+        <div class="mmj-tax-calc-box" data-rec-rate="0.30" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-size: 13px; font-weight: 700; color: #475569;">Estimated Monthly Dispensary Spend:</span>
+            <span class="mmj-calc-monthly-spend" style="font-size: 22px; font-weight: 900; color: #16a34a;">$200 / month</span>
+          </div>
+          <input type="range" class="mmj-tax-slider" min="50" max="800" step="25" value="200" style="width: 100%; accent-color: #16a34a; margin-bottom: 24px; cursor: pointer;">
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding-top: 16px; border-top: 1px solid #f1f5f9; text-align: center;">
+            <div style="background: #f8fafc; border-radius: 12px; padding: 14px;">
+              <div style="font-size: 11px; color: #64748b;">Yearly Retail Spend</div>
+              <div style="font-size: 18px; font-weight: 800; color: #0f172a;">$2,400</div>
+            </div>
+            <div style="background: #fff1f2; border-radius: 12px; padding: 14px;">
+              <div style="font-size: 11px; color: #e11d48;">Recreational Tax Incurred</div>
+              <div class="mmj-calc-rec-tax" style="font-size: 18px; font-weight: 800; color: #be123c;">$720</div>
+            </div>
+            <div style="background: #ecfdf5; border-radius: 12px; padding: 14px;">
+              <div style="font-size: 11px; color: #065f46; font-weight: 800;">Your Net Savings</div>
+              <div class="mmj-calc-savings" style="font-size: 22px; font-weight: 900; color: #16a34a;">$600</div>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="background: #008f58; color: #fff; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-flex;">
+              Save Money at Dispensaries &mdash; Get Certified &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DISPENSARY ACCEPTANCE DIRECTORY -->
+    <section style="padding: 64px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1100px; margin: 0 auto; text-align: center;">
+        <h2 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0 0 10px;">Accepted at Licensed Dispensaries in & around <?php echo $city; ?></h2>
+        <p style="font-size: 14px; color: #64748b; margin: 0 0 32px;">Our physician-signed medical certificates are 100% legal and recognized by state-licensed dispensaries and delivery services across:</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;">
+          <?php foreach ($areas as $area) : ?>
+            <div class="mmj-dispensary-tag" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 12px;">
+              <div style="font-size: 18px; margin-bottom: 4px;">&#x1F4CD;</div>
+              <div style="font-size: 13px; font-weight: 800; color: #0f172a;"><?php echo esc_html($area); ?></div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Same-Day Delivery & Pickup</div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3-STEP TELEHEALTH PROCESS -->
+    <section style="padding: 64px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1000px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h2 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0 0 8px;">Our Simple 3-Step Telehealth Process in <?php echo $city; ?></h2>
+          <p style="font-size: 14px; color: #64748b; margin: 0;">Get certified from your living room in three quick steps.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+          <div class="mmj-step-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #008f58; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 14px;">1</div>
+            <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 8px;">5-Min Online Intake</h3>
+            <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin: 0;">Complete your basic medical intake and state identification on our secure, HIPAA-compliant patient portal.</p>
+          </div>
+          <div class="mmj-step-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #008f58; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 14px;">2</div>
+            <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 8px;">15-Min Telehealth Call</h3>
+            <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin: 0;">Meet directly with our board-certified physician over an encrypted video or phone consultation to discuss your health needs.</p>
+          </div>
+          <div class="mmj-step-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #008f58; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 14px;">3</div>
+            <h3 style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 8px;">Instant Digital Delivery</h3>
+            <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin: 0;">Upon physician approval, your official signed medical marijuana recommendation is emailed immediately for instant dispensary use.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROVIDER ASSURANCE GRID -->
+    <section style="padding: 64px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1100px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #16a34a; letter-spacing: 0.5px; margin-bottom: 6px;">Dedicated Care Provider</div>
+          <h2 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0 0 8px;">Why Patients Trust Online MMJ Card in <?php echo $city; ?></h2>
+          <p style="font-size: 14px; color: #64748b; margin: 0;">We are a dedicated medical cannabis telemedicine clinic with our own board-certified physicians, providing direct evaluations, continuous patient support, and guaranteed legal certifications.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">&#x2695;</div>
+            <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">In-House Certified Doctors</h4>
+            <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">Consult directly with our licensed physicians. We never outsource your care to third-party providers.</p>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">&#x1F6E1;</div>
+            <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">HIPAA-Compliant Privacy</h4>
+            <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">Your medical history and video sessions are strictly protected under federal medical confidentiality laws.</p>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">&#x2705;</div>
+            <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">100% State Legality</h4>
+            <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">Every certificate contains an official state physician registry ID, ensuring seamless verification at dispensaries.</p>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+            <div style="font-size: 24px; margin-bottom: 8px;">&#x1F4B5;</div>
+            <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">Zero-Risk Refund Policy</h4>
+            <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">If our physician determines you do not qualify for a medical recommendation, you are immediately refunded 100%.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRANSPARENT SERVICES & PRICING PLANS -->
+    <section id="pricing" style="padding: 64px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1100px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h2 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0 0 8px;">Telemedicine Services & Pricing Plans in <?php echo $city; ?></h2>
+          <p style="font-size: 14px; color: #64748b; margin: 0;">Flat-rate, transparent medical cannabis pricing with zero hidden clinic fees.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px;">
+          <!-- Card 1 -->
+          <div class="mmj-pricing-card" style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; text-align: center;">
+            <div style="font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase;">New Patient</div>
+            <div style="font-size: 32px; font-weight: 900; color: #0f172a; margin: 8px 0;"><?php echo $price; ?></div>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;">Full 1-year doctor recommendation, digital verification, and instant dispensary access.</p>
+            <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="display: block; width: 100%; text-decoration: none; padding: 10px; font-size: 12px; box-sizing: border-box;">Book Evaluation &rarr;</a>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="mmj-pricing-card featured" style="background: #ffffff; border: 2px solid #16a34a; border-radius: 16px; padding: 24px; text-align: center; position: relative;">
+            <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #16a34a; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 9999px; text-transform: uppercase;">Most Popular</div>
+            <div style="font-size: 12px; font-weight: 800; color: #16a34a; text-transform: uppercase;">Card Renewal</div>
+            <div style="font-size: 32px; font-weight: 900; color: #0f172a; margin: 8px 0;"><?php echo $price; ?></div>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;">Fast renewal from any previous physician or clinic. Maintain unbroken dispensary access.</p>
+            <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="display: block; width: 100%; text-decoration: none; padding: 10px; font-size: 12px; box-sizing: border-box;">Renew Online &rarr;</a>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="mmj-pricing-card" style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; text-align: center;">
+            <div style="font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase;">99-Plant Cultivation</div>
+            <div style="font-size: 32px; font-weight: 900; color: #0f172a; margin: 8px 0;">$149.00</div>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;">Grow up to 99 plants legally with certified medical grower recommendation.</p>
+            <a href="#get-card" class="mmj-btn-secondary mmj-open-evaluation-btn" data-open-modal="evaluation" style="display: block; width: 100%; text-decoration: none; padding: 10px; font-size: 12px; box-sizing: border-box;">Apply Now &rarr;</a>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="mmj-pricing-card" style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; text-align: center;">
+            <div style="font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase;">ESA Pet Letter</div>
+            <div style="font-size: 32px; font-weight: 900; color: #0f172a; margin: 8px 0;">$129.00</div>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;">Fair Housing Act compliant Emotional Support Animal housing letter.</p>
+            <a href="#get-card" class="mmj-btn-secondary mmj-open-evaluation-btn" data-open-modal="evaluation" style="display: block; width: 100%; text-decoration: none; padding: 10px; font-size: 12px; box-sizing: border-box;">Apply Now &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUALIFYING MEDICAL CONDITIONS -->
+    <section style="padding: 64px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+        <h2 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0 0 8px;">Qualifying Conditions for Medical Cannabis in <?php echo $state; ?></h2>
+        <p style="font-size: 14px; color: #64748b; margin: 0 0 28px;">Our licensed physicians evaluate patients for a wide range of state-qualifying medical conditions, including:</p>
+
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+          <span class="mmj-condition-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #1e293b;">&#9679; Chronic Back & Neck Pain</span>
+          <span class="mmj-condition-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #1e293b;">&#9679; Severe Anxiety & Panic</span>
+          <span class="mmj-condition-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #1e293b;">&#9679; Insomnia & Sleep Disorders</span>
+          <span class="mmj-condition-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #1e293b;">&#9679; PTSD & Trauma Recovery</span>
+          <span class="mmj-condition-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #1e293b;">&#9679; Cancer & Chemotherapy Support</span>
+          <span class="mmj-condition-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #1e293b;">&#9679; Migraines & Headaches</span>
+          <span class="mmj-condition-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #1e293b;">&#9679; Arthritis & Joint Stiffness</span>
+          <span class="mmj-condition-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #1e293b;">&#9679; Glaucoma & Ocular Pressure</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLINICAL FAQS ACCORDION -->
+    <section style="padding: 64px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 850px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 36px;">
+          <h2 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0 0 8px;"><?php echo $city; ?> Medical Marijuana FAQs</h2>
+          <p style="font-size: 14px; color: #64748b; margin: 0;">Frequently asked questions answered by our licensed <?php echo $state; ?> medical team.</p>
+        </div>
+
+        <div class="mmj-faq-container">
+          <div class="mmj-faq-item" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 12px; overflow: hidden;">
+            <button type="button" class="mmj-faq-question" style="width: 100%; text-align: left; padding: 18px 20px; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer;">
+              <span>How do I get my medical marijuana card online in <?php echo $city; ?>?</span>
+              <span class="mmj-faq-arrow" style="font-size: 14px; color: #64748b;">&#9660;</span>
+            </button>
+            <div class="mmj-faq-answer" style="padding: 0 20px 18px; font-size: 13px; color: #475569; line-height: 1.6;">
+              Getting certified online in <?php echo $city; ?> takes just three quick steps: fill out our secure intake questionnaire, consult with our licensed cannabis doctor over a confidential 10-15 minute video call, and receive your official digital medical marijuana recommendation immediately upon approval.
+            </div>
+          </div>
+
+          <div class="mmj-faq-item" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 12px; overflow: hidden;">
+            <button type="button" class="mmj-faq-question" style="width: 100%; text-align: left; padding: 18px 20px; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer;">
+              <span>Can I use my recommendation at <?php echo $city; ?> dispensaries immediately?</span>
+              <span class="mmj-faq-arrow" style="font-size: 14px; color: #64748b;">&#9660;</span>
+            </button>
+            <div class="mmj-faq-answer" style="padding: 0 20px 18px; font-size: 13px; color: #475569; line-height: 1.6;">
+              Yes! Your digital doctor recommendation contains an official state physician registry number and QR verification code that licensed storefront dispensaries and courier delivery services across <?php echo $city; ?> accept immediately.
+            </div>
+          </div>
+
+          <div class="mmj-faq-item" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 12px; overflow: hidden;">
+            <button type="button" class="mmj-faq-question" style="width: 100%; text-align: left; padding: 18px 20px; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer;">
+              <span>How much do I save on cannabis taxes in <?php echo $city; ?>?</span>
+              <span class="mmj-faq-arrow" style="font-size: 14px; color: #64748b;">&#9660;</span>
+            </button>
+            <div class="mmj-faq-answer" style="padding: 0 20px 18px; font-size: 13px; color: #475569; line-height: 1.6;">
+              Medical marijuana patients save significantly on retail cannabis transactions. While recreational adult-use cannabis carries cumulative sales, excise, and local business taxes totaling up to 34.5%, certified medical patients are exempt from retail sales tax and receive medicinal compassionate pricing.
+            </div>
+          </div>
+
+          <div class="mmj-faq-item" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 12px; overflow: hidden;">
+            <button type="button" class="mmj-faq-question" style="width: 100%; text-align: left; padding: 18px 20px; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer;">
+              <span>What happens if I am not approved by the physician?</span>
+              <span class="mmj-faq-arrow" style="font-size: 14px; color: #64748b;">&#9660;</span>
+            </button>
+            <div class="mmj-faq-answer" style="padding: 0 20px 18px; font-size: 13px; color: #475569; line-height: 1.6;">
+              We offer a strict 100% Money-Back Guarantee. In the rare event that our physician determines that you do not qualify for a medical cannabis recommendation under <?php echo $state; ?> law, your consultation fee is refunded immediately in full.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PATIENT REVIEWS -->
+    <section style="padding: 64px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+        <h2 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0 0 8px;">Real Patient Reviews from <?php echo $city; ?></h2>
+        <p style="font-size: 14px; color: #64748b; margin: 0 0 36px;">Over 250,000 patients have received their legal medical recommendation through our telehealth platform.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; text-align: left;">
+          <div class="mmj-review-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+            <div style="color: #f59e0b; margin-bottom: 8px;">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p style="font-size: 13px; color: #334155; line-height: 1.6; margin: 0 0 12px;">"Easiest doctor appointment I have ever had. The video call lasted maybe 10 minutes, the doctor listened to my chronic back pain symptoms, and my PDF recommendation arrived in my inbox before I even hung up."</p>
+            <div style="font-size: 12px; font-weight: 800; color: #0f172a;">Marcus T. &middot; <span style="font-weight: 600; color: #16a34a;">Verified <?php echo $city; ?> Patient</span></div>
+          </div>
+          <div class="mmj-review-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+            <div style="color: #f59e0b; margin-bottom: 8px;">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p style="font-size: 13px; color: #334155; line-height: 1.6; margin: 0 0 12px;">"Renewed my card during my lunch break. Saved over $40 on taxes at my local dispensary the very same afternoon. Truly worth every penny."</p>
+            <div style="font-size: 12px; font-weight: 800; color: #0f172a;">Elena R. &middot; <span style="font-weight: 600; color: #16a34a;">Verified <?php echo $city; ?> Patient</span></div>
+          </div>
+          <div class="mmj-review-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+            <div style="color: #f59e0b; margin-bottom: 8px;">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p style="font-size: 13px; color: #334155; line-height: 1.6; margin: 0 0 12px;">"As someone with severe anxiety, going to physical medical offices was stressful. Being able to do this securely from my living room was such a relief."</p>
+            <div style="font-size: 12px; font-weight: 800; color: #0f172a;">David K. &middot; <span style="font-weight: 600; color: #16a34a;">Verified <?php echo $city; ?> Patient</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CALL TO ACTION BANNER -->
+    <section style="padding: 64px 16px; background: #ffffff; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div class="mmj-cta-banner" style="max-width: 1000px; margin: 0 auto; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border-radius: 24px; padding: 48px 24px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+        <h2 style="font-size: 32px; font-weight: 900; margin: 0 0 12px; color: #ffffff;">Ready to Get Your Legal MMJ Card in <?php echo $city; ?>?</h2>
+        <p style="font-size: 15px; color: #cbd5e1; max-width: 600px; margin: 0 auto 28px; line-height: 1.6;">Get certified online in 15 minutes with our licensed cannabis physicians. 99% approval guarantee or 100% refund.</p>
+        <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="background: #008f58; color: #ffffff; padding: 16px 36px; border-radius: 14px; font-size: 14px; font-weight: 900; text-transform: uppercase; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+          <span>Book Your <?php echo $city; ?> Evaluation Now &rarr;</span>
+        </a>
+      </div>
+    </section>
+    <?php
+    return ob_get_clean();
+}
+
+/**
+ * Generate Full, Rich HTML for State Landing Pages
+ */
+function online_mmj_generate_state_html($st) {
+    $state      = esc_html($st['name']);
+    $code       = esc_html($st['code']);
+    $price      = esc_html('$' . number_format($st['price'], 2));
+    $renewal    = esc_html('$' . number_format($st['renewalPrice'], 2));
+    $validity   = esc_html($st['validity']);
+    $possession = esc_html($st['possessionLimit']);
+    $cult       = esc_html(!empty($st['cultivation']) ? $st['cultivation'] : 'Consult with licensed doctor');
+    $summary    = esc_html($st['summary']);
+
+    ob_start();
+    ?>
+    <section class="mmj-hero-section" style="padding: 40px 16px 56px; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 60%, #ffffff 100%); border-bottom: 1px solid #f1f5f9; font-family: 'Open Sans', system-ui, sans-serif;">
+      <div style="max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; align-items: center;">
+        <div>
+          <div class="mmj-badge-emerald" style="display: inline-flex; align-items: center; gap: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px;">
+            <span>&#9679; Official State Legal Guide &middot; <?php echo $state; ?> (<?php echo $code; ?>)</span>
+          </div>
+
+          <h1 style="font-size: 38px; line-height: 1.15; font-weight: 900; color: #0f172a; margin: 0 0 16px;">
+            <?php echo $state; ?> Medical Marijuana Card <span style="color: #16a34a;">Online Telehealth</span>
+          </h1>
+
+          <p style="font-size: 16px; line-height: 1.6; color: #475569; margin: 0 0 24px;">
+            <?php echo $summary; ?>
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+              <div style="font-size: 11px; color: #64748b; font-weight: 700;">New Patient Fee</div>
+              <div style="font-size: 16px; font-weight: 900; color: #0f172a;"><?php echo $price; ?></div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+              <div style="font-size: 11px; color: #64748b; font-weight: 700;">Card Validity</div>
+              <div style="font-size: 16px; font-weight: 900; color: #16a34a;"><?php echo $validity; ?></div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+              <div style="font-size: 11px; color: #64748b; font-weight: 700;">Renewal Fee</div>
+              <div style="font-size: 16px; font-weight: 900; color: #d97706;"><?php echo $renewal; ?></div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+            <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="background: #008f58; color: #fff; padding: 14px 28px; border-radius: 12px; font-size: 13px; font-weight: 900; text-transform: uppercase; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+              <span>Book <?php echo $code; ?> Evaluation Now &rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <div class="mmj-practice-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08); padding: 28px;">
+            <h3 style="font-size: 18px; font-weight: 900; color: #0f172a; margin: 0 0 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+              <?php echo $state; ?> State Cannabis Statutes
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: #475569;">
+              <div>
+                <strong style="color: #0f172a; display: block;">Legal Possession Limit:</strong>
+                <span><?php echo $possession; ?></span>
+              </div>
+              <div>
+                <strong style="color: #0f172a; display: block;">Cultivation Guidelines:</strong>
+                <span><?php echo $cult; ?></span>
+              </div>
+              <div>
+                <strong style="color: #0f172a; display: block;">Evaluation Method:</strong>
+                <span>100% Online Encrypted Video Telehealth Consultation</span>
+              </div>
+            </div>
+            <div style="margin-top: 24px;">
+              <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="display: block; width: 100%; text-align: center; box-sizing: border-box; text-decoration: none;">
+                Get Certified in <?php echo $state; ?> &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <?php
+    return ob_get_clean();
+}
+
+/**
+ * Generate Full, Rich HTML for Telehealth Services
+ */
+function online_mmj_generate_service_html($slug, $s) {
+    $title = esc_html($s['title']);
+    $price = esc_html($s['price']);
+    $desc  = esc_html($s['desc']);
+    $time  = esc_html(!empty($s['time']) ? $s['time'] : '10-15 Minutes');
+
+    ob_start();
+    ?>
+    <section class="mmj-hero-section" style="padding: 48px 16px 64px; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif; text-align: center;">
+      <div style="max-width: 800px; margin: 0 auto;">
+        <div class="mmj-badge-emerald" style="display: inline-flex; align-items: center; gap: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px;">
+          <span>Official Telehealth Service Package</span>
+        </div>
+        <h1 style="font-size: 38px; font-weight: 900; color: #0f172a; margin: 0 0 16px;"><?php echo $title; ?></h1>
+        <p style="font-size: 16px; line-height: 1.6; color: #475569; margin: 0 0 24px;"><?php echo $desc; ?></p>
+        
+        <div style="display: inline-flex; gap: 20px; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px 32px; border-radius: 16px; margin-bottom: 28px;">
+          <div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700;">Price</div>
+            <div style="font-size: 28px; font-weight: 900; color: #16a34a;"><?php echo $price; ?></div>
+          </div>
+          <div style="width: 1px; height: 36px; background: #cbd5e1;"></div>
+          <div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700;">Turnaround</div>
+            <div style="font-size: 20px; font-weight: 800; color: #0f172a;"><?php echo $time; ?></div>
+          </div>
+        </div>
+
+        <div>
+          <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="background: #008f58; color: #fff; padding: 16px 36px; border-radius: 12px; font-size: 14px; font-weight: 900; text-transform: uppercase; text-decoration: none; display: inline-flex;">
+            Start Online Consultation Now &rarr;
+          </a>
+        </div>
+      </div>
+    </section>
+    <?php
+    return ob_get_clean();
+}
+
+/**
+ * Generate Full HTML for Qualifying Condition Guide Pages
+ */
+function online_mmj_generate_condition_html($slug, $cd) {
+    $title    = esc_html($cd['title']);
+    $desc     = esc_html($cd['desc']);
+    $category = esc_html(!empty($cd['category']) ? $cd['category'] : 'Medical Marijuana Evaluation');
+
+    ob_start();
+    ?>
+    <section class="mmj-hero-section" style="padding: 48px 16px 64px; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); border-bottom: 1px solid #e2e8f0; font-family: 'Open Sans', system-ui, sans-serif; text-align: center;">
+      <div style="max-width: 800px; margin: 0 auto;">
+        <div class="mmj-badge-emerald" style="display: inline-flex; align-items: center; gap: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px;">
+          <span>Category: <?php echo $category; ?></span>
+        </div>
+        <h1 style="font-size: 38px; font-weight: 900; color: #0f172a; margin: 0 0 16px;"><?php echo $title; ?></h1>
+        <p style="font-size: 16px; line-height: 1.6; color: #475569; margin: 0 0 24px;"><?php echo $desc; ?></p>
+        
+        <div>
+          <a href="#get-card" class="mmj-btn-primary mmj-open-evaluation-btn" data-open-modal="evaluation" style="background: #008f58; color: #fff; padding: 16px 36px; border-radius: 12px; font-size: 14px; font-weight: 900; text-transform: uppercase; text-decoration: none; display: inline-flex;">
+            Schedule Physician Evaluation for <?php echo $title; ?> &rarr;
+          </a>
+        </div>
+      </div>
+    </section>
+    <?php
+    return ob_get_clean();
+}
+
+// Fallback HTML helpers for templates
+function online_mmj_get_city_fallback_html($post_id) {
+    $slug = get_post_field('post_name', $post_id);
+    $clean = preg_replace('/^medical-marijuana-card-/', '', $slug);
+    $cities = online_mmj_get_cities();
+    if (isset($cities['medical-marijuana-card-' . $clean])) {
+        return online_mmj_generate_city_html($cities['medical-marijuana-card-' . $clean]);
+    }
+    if (isset($cities[$clean])) {
+        return online_mmj_generate_city_html($cities[$clean]);
+    }
+    return '';
+}
+
+function online_mmj_get_state_fallback_html($post_id) {
+    $slug = get_post_field('post_name', $post_id);
+    $clean = preg_replace('/^medical-marijuana-card-/', '', $slug);
+    $states = online_mmj_get_states();
+    if (isset($states['medical-marijuana-card-' . $clean])) {
+        return online_mmj_generate_state_html($states['medical-marijuana-card-' . $clean]);
+    }
+    if (isset($states[$clean])) {
+        return online_mmj_generate_state_html($states[$clean]);
+    }
+    return '';
+}
+
+function online_mmj_get_service_fallback_html($post_id) {
+    $slug = get_post_field('post_name', $post_id);
+    $services = online_mmj_get_default_services();
+    if (isset($services[$slug])) {
+        return online_mmj_generate_service_html($slug, $services[$slug]);
+    }
+    return '';
+}
+
+function online_mmj_get_condition_fallback_html($post_id) {
+    $slug = get_post_field('post_name', $post_id);
+    $conditions = online_mmj_get_default_conditions();
+    if (isset($conditions[$slug])) {
+        return online_mmj_generate_condition_html($slug, $conditions[$slug]);
+    }
+    return '';
+}
+
 function online_mmj_sync_all_core_pages($force = false) {
     $created_pages = array();
     $existing_pages = array();
@@ -1180,23 +1862,23 @@ function online_mmj_sync_all_core_pages($force = false) {
             'template'         => 'template-contact.php',
             'seo_title'        => 'Contact Us | Online MMJ Card Telehealth Support',
             'meta_description' => 'Get in touch with our board-certified medical cannabis doctors and HIPAA-compliant patient support team.',
-            'content'          => '<!-- wp:paragraph --><p>Our dedicated medical marijuana telehealth clinic and patient support desk are available 7 days a week. Complete the contact form below or call our support line.</p><!-- /wp:paragraph -->[online_mmj_app service="contact"]',
+            'content'          => '<!-- wp:paragraph --><p>Our dedicated medical marijuana telehealth clinic and patient support desk are available 7 days a week. Complete the contact form below or call our support line at (888) 420-6789.</p><!-- /wp:paragraph -->[online_mmj_booking button_text="Contact Physician Support Desk" service="new-patient"]',
         ),
         'book-evaluation' => array(
-            'title'            => 'Schedule Online MMJ Doctor Evaluation',
+            'title'            => 'Book Online MMJ Doctor Evaluation',
             'slug'             => 'book-evaluation',
             'template'         => 'template-builder.php',
-            'seo_title'        => 'Book Online MMJ Doctor Appointment | 420 Evaluations',
-            'meta_description' => 'Schedule your 15-minute telehealth evaluation with licensed medical marijuana doctors. 99% approval rate or money back guarantee.',
-            'content'          => '<!-- wp:paragraph --><p>Complete your HIPAA-compliant intake in 2 minutes and meet with a licensed cannabis physician from your smartphone or computer.</p><!-- /wp:paragraph -->[online_mmj_app service="new-patient"]',
+            'seo_title'        => 'Schedule 420 Evaluation Online | Same-Day MMJ Rec',
+            'meta_description' => 'Fast 15-minute video appointment with licensed medical marijuana doctors. Same-day digital cannabis recommendation upon approval.',
+            'content'          => '<!-- wp:paragraph --><p>Select your state and schedule your 100% online video consultation with a licensed cannabis doctor.</p><!-- /wp:paragraph -->[online_mmj_booking button_text="Launch Telehealth Video Room" service="new-patient"]',
         ),
         'patient-portal' => array(
-            'title'            => 'Patient Portal & Medical Records Access',
+            'title'            => 'Patient Records & Recommendation Portal',
             'slug'             => 'patient-portal',
             'template'         => 'template-builder.php',
-            'seo_title'        => 'Patient Portal Login | Online MMJ Card Recommendation',
-            'meta_description' => 'Access your digital medical marijuana recommendation letter, renewal dates, and doctor consultations.',
-            'content'          => '<!-- wp:paragraph --><p>Secure, encrypted patient records portal. Download your official signed medical cannabis recommendation PDF 24/7.</p><!-- /wp:paragraph -->[online_mmj_app service="portal"]',
+            'seo_title'        => 'Patient Portal Login & Recommendation Verification',
+            'meta_description' => 'Access your digital medical marijuana recommendation, renewal dates, and dispensary verification letters 24/7.',
+            'content'          => '<!-- wp:paragraph --><p>Secure HIPAA-compliant patient records system. Download your signed recommendation letter and digital card.</p><!-- /wp:paragraph -->[online_mmj_booking button_text="Access Patient Records" service="renewal"]',
         ),
         'qualifying-conditions' => array(
             'title'            => 'Qualifying Medical Conditions for Medical Marijuana',
@@ -1204,7 +1886,7 @@ function online_mmj_sync_all_core_pages($force = false) {
             'template'         => 'template-builder.php',
             'seo_title'        => 'Qualifying Conditions for Medical Cannabis | MMJ Doctors',
             'meta_description' => 'Comprehensive directory of state-approved qualifying medical conditions including chronic pain, PTSD, anxiety, insomnia, cancer, and arthritis.',
-            'content'          => '<!-- wp:paragraph --><p>Review qualifying medical conditions recognized by state health departments. Our licensed doctors evaluate patients for pain, anxiety, sleep, and neurological conditions.</p><!-- /wp:paragraph -->[online_mmj_app service="conditions"]',
+            'content'          => '<!-- wp:paragraph --><p>Review qualifying medical conditions recognized by state health departments. Our licensed doctors evaluate patients for pain, anxiety, sleep, and neurological conditions.</p><!-- /wp:paragraph -->[online_mmj_booking button_text="See If You Qualify" service="new-patient"]',
         ),
         'medical-marijuana-insights' => array(
             'title'            => 'Medical Marijuana Insights & Clinical Guides',
@@ -1212,7 +1894,7 @@ function online_mmj_sync_all_core_pages($force = false) {
             'template'         => 'template-builder.php',
             'seo_title'        => 'Medical Marijuana Insights, Research & Laws | MMJ Blog',
             'meta_description' => 'Clinical articles, state cannabis legislation updates, dosing guides, and terpene science written by medical marijuana physicians.',
-            'content'          => '<!-- wp:paragraph --><p>Authoritative cannabis medicine articles, legal analyses, and patient education guides curated by licensed telehealth doctors.</p><!-- /wp:paragraph -->[online_mmj_app service="blog"]',
+            'content'          => '<!-- wp:paragraph --><p>Authoritative cannabis medicine articles, legal analyses, and patient education guides curated by licensed telehealth doctors.</p><!-- /wp:paragraph -->',
         ),
         'medical-marijuana-reciprocity' => array(
             'title'            => 'State Medical Marijuana Reciprocity & Travel Laws',
@@ -1220,7 +1902,7 @@ function online_mmj_sync_all_core_pages($force = false) {
             'template'         => 'template-builder.php',
             'seo_title'        => 'Medical Marijuana Reciprocity Guide by State | Travel Rules',
             'meta_description' => 'Check which states accept out-of-state medical marijuana cards. Interactive reciprocity checker and legal cannabis travel guidelines.',
-            'content'          => '<!-- wp:paragraph --><p>Use our interactive reciprocity checker to see which states honor your medical cannabis recommendation when traveling across state lines.</p><!-- /wp:paragraph -->[online_mmj_app service="reciprocity"]',
+            'content'          => '<!-- wp:paragraph --><p>Use our interactive reciprocity checker to see which states honor your medical cannabis recommendation when traveling across state lines.</p><!-- /wp:paragraph -->[online_mmj_booking button_text="Check State Reciprocity" service="new-patient"]',
         ),
         'doctor-directory' => array(
             'title'            => 'Directory of Licensed Medical Marijuana Doctors',
@@ -1228,7 +1910,7 @@ function online_mmj_sync_all_core_pages($force = false) {
             'template'         => 'template-builder.php',
             'seo_title'        => 'Licensed Medical Marijuana Doctors & Telehealth Physicians',
             'meta_description' => 'Meet our team of board-certified, state-licensed medical marijuana telehealth physicians specializing in integrative cannabis therapeutics.',
-            'content'          => '<!-- wp:paragraph --><p>All physicians on our telehealth platform are board-certified and active license holders in good standing with state medical boards.</p><!-- /wp:paragraph -->[online_mmj_app service="doctors"]',
+            'content'          => '<!-- wp:paragraph --><p>All physicians on our telehealth platform are board-certified and active license holders in good standing with state medical boards.</p><!-- /wp:paragraph -->[online_mmj_booking button_text="Meet Our Clinical Team" service="new-patient"]',
         ),
     );
 
@@ -1262,18 +1944,14 @@ function online_mmj_sync_all_core_pages($force = false) {
         }
     }
 
-    // 2. Telehealth Services Pages
+    // 2. Telehealth Services Pages (Full Rich Content)
     $services = online_mmj_get_default_services();
     foreach ($services as $slug => $s) {
         $existing_id = online_mmj_get_page_by_slug($slug);
         if ($existing_id && !$force) {
             $existing_pages[] = $s['title'] . ' (/' . $slug . '/)';
         } else {
-            $content = sprintf(
-                '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->[online_mmj_app service="%s"]',
-                esc_html($s['desc']),
-                esc_attr($slug)
-            );
+            $content = online_mmj_generate_service_html($slug, $s);
             $page_data = array(
                 'post_title'   => sanitize_text_field($s['title']),
                 'post_name'    => sanitize_title($slug),
@@ -1299,115 +1977,129 @@ function online_mmj_sync_all_core_pages($force = false) {
         }
     }
 
-    // 3. State Telehealth Law & Pricing Pages (All 15 States)
+    // 3. State Telehealth Law & Pricing Pages (Keyword Slugs: medical-marijuana-card-{state})
     $states = online_mmj_get_states();
-    foreach ($states as $slug => $st) {
-        $existing_id = online_mmj_get_page_by_slug($slug);
-        if ($existing_id && !$force) {
-            $existing_pages[] = $st['name'] . ' MMJ Telehealth (/' . $slug . '/)';
+    $processed_states = array();
+    foreach ($states as $raw_slug => $st) {
+        $clean_slug = preg_replace('/^medical-marijuana-card-/', '', $raw_slug);
+        $canonical_slug = 'medical-marijuana-card-' . $clean_slug;
+        if (in_array($canonical_slug, $processed_states, true)) continue;
+        $processed_states[] = $canonical_slug;
+
+        // Check if old short slug (e.g. 'california') exists and clean up duplicate
+        $short_id = online_mmj_get_page_by_slug($clean_slug);
+        $target_id = online_mmj_get_page_by_slug($canonical_slug);
+
+        if ($short_id && $target_id && $short_id !== $target_id) {
+            wp_delete_post($short_id, true);
+        } elseif ($short_id && !$target_id) {
+            wp_update_post(array('ID' => $short_id, 'post_name' => $canonical_slug));
+            $target_id = $short_id;
+        }
+
+        $title = sprintf('%s Medical Marijuana Card Online & Doctor Evaluations', $st['name']);
+        $content = online_mmj_generate_state_html($st);
+
+        $page_data = array(
+            'post_title'   => sanitize_text_field($title),
+            'post_name'    => sanitize_title($canonical_slug),
+            'post_content' => $content,
+            'post_status'  => 'publish',
+            'post_type'    => 'page',
+        );
+        if ($target_id && $force) {
+            $page_data['ID'] = $target_id;
+            wp_update_post($page_data);
+            $pid = $target_id;
+        } elseif ($target_id && !$force) {
+            $existing_pages[] = $st['name'] . ' MMJ Telehealth (/' . $canonical_slug . '/)';
+            $pid = $target_id;
         } else {
-            $title = sprintf('%s Medical Marijuana Card Online & Doctor Evaluations', $st['name']);
-            $content = sprintf(
-                '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->
-                <!-- wp:paragraph --><p><strong>New Patient Fee:</strong> $%s | <strong>Card Renewal:</strong> $%s | <strong>Validity:</strong> %s</p><!-- /wp:paragraph -->
-                <!-- wp:paragraph --><p><strong>Legal Possession:</strong> %s</p><!-- /wp:paragraph -->
-                [online_mmj_app state="%s"]',
-                esc_html($st['summary']),
-                esc_html($st['price']),
-                esc_html($st['renewalPrice']),
-                esc_html($st['validity']),
-                esc_html($st['possessionLimit']),
-                esc_attr($slug)
-            );
-            $page_data = array(
-                'post_title'   => sanitize_text_field($title),
-                'post_name'    => sanitize_title($slug),
-                'post_content' => $content,
-                'post_status'  => 'publish',
-                'post_type'    => 'page',
-            );
-            if ($existing_id && $force) {
-                $page_data['ID'] = $existing_id;
-                wp_update_post($page_data);
-                $pid = $existing_id;
-            } else {
-                $pid = wp_insert_post($page_data);
-            }
-            if ($pid && !is_wp_error($pid)) {
-                update_post_meta($pid, '_wp_page_template', 'template-state.php');
-                update_post_meta($pid, '_yoast_wpseo_title', $st['name'] . ' Medical Marijuana Card Online | Fast ' . $st['code'] . ' Evaluations');
-                update_post_meta($pid, '_seo_title', $st['name'] . ' Medical Marijuana Card Online | Fast ' . $st['code'] . ' Evaluations');
-                update_post_meta($pid, '_yoast_wpseo_metadesc', $st['summary']);
-                update_post_meta($pid, '_meta_description', $st['summary']);
-                $created_pages[] = $st['name'] . ' MMJ Telehealth (/' . $slug . '/)';
+            $pid = wp_insert_post($page_data);
+        }
+
+        if ($pid && !is_wp_error($pid)) {
+            update_post_meta($pid, '_wp_page_template', 'template-state.php');
+            update_post_meta($pid, '_mmj_state_name', $st['name']);
+            update_post_meta($pid, '_mmj_state_code', $st['code']);
+            update_post_meta($pid, '_mmj_consult_price', '$' . number_format($st['price'], 2));
+            update_post_meta($pid, '_yoast_wpseo_title', $st['name'] . ' Medical Marijuana Card Online | Fast ' . $st['code'] . ' Evaluations');
+            update_post_meta($pid, '_seo_title', $st['name'] . ' Medical Marijuana Card Online | Fast ' . $st['code'] . ' Evaluations');
+            update_post_meta($pid, '_yoast_wpseo_metadesc', $st['summary']);
+            update_post_meta($pid, '_meta_description', $st['summary']);
+            if (!$target_id || $force) {
+                $created_pages[] = $st['name'] . ' MMJ Telehealth (/' . $canonical_slug . '/)';
             }
         }
     }
 
-    // 4. Local City Landing Pages (All 19 Target Metropolitan Areas)
+    // 4. Local City Landing Pages (Keyword Slugs: medical-marijuana-card-{city}, Full Rich Layout)
     $cities = online_mmj_get_cities();
-    foreach ($cities as $slug => $ct) {
-        $existing_id = online_mmj_get_page_by_slug($slug);
-        if ($existing_id && !$force) {
-            $existing_pages[] = $ct['cityName'] . ', ' . $ct['stateCode'] . ' (/' . $slug . '/)';
+    $processed_cities = array();
+    foreach ($cities as $raw_slug => $ct) {
+        $clean_slug = preg_replace('/^medical-marijuana-card-/', '', $raw_slug);
+        $clean_slug = preg_replace('/-(ca|fl|ny|pa|oh)$/i', '', $clean_slug);
+        $canonical_slug = 'medical-marijuana-card-' . $clean_slug;
+        if (in_array($canonical_slug, $processed_cities, true)) continue;
+        $processed_cities[] = $canonical_slug;
+
+        // Check if old short slug (e.g. 'fresno') exists and clean up duplicate
+        $short_id = online_mmj_get_page_by_slug($clean_slug);
+        $target_id = online_mmj_get_page_by_slug($canonical_slug);
+
+        if ($short_id && $target_id && $short_id !== $target_id) {
+            wp_delete_post($short_id, true);
+        } elseif ($short_id && !$target_id) {
+            wp_update_post(array('ID' => $short_id, 'post_name' => $canonical_slug));
+            $target_id = $short_id;
+        }
+
+        $title = sprintf('%s Medical Marijuana Card Online | %s 420 Doctor', $ct['cityName'], $ct['stateCode']);
+        $content = online_mmj_generate_city_html($ct);
+
+        $page_data = array(
+            'post_title'   => sanitize_text_field($title),
+            'post_name'    => sanitize_title($canonical_slug),
+            'post_content' => $content,
+            'post_status'  => 'publish',
+            'post_type'    => 'page',
+        );
+        if ($target_id && $force) {
+            $page_data['ID'] = $target_id;
+            wp_update_post($page_data);
+            $pid = $target_id;
+        } elseif ($target_id && !$force) {
+            $existing_pages[] = $ct['cityName'] . ', ' . $ct['stateCode'] . ' (/' . $canonical_slug . '/)';
+            $pid = $target_id;
         } else {
-            $title = !empty($ct['headline']) ? $ct['headline'] : sprintf('%s Medical Marijuana Doctor & 420 Evaluations', $ct['cityName']);
-            $content = sprintf(
-                '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->
-                <!-- wp:paragraph --><p><strong>Local Clinic Zone:</strong> %s, %s %s | <strong>Phone:</strong> %s</p><!-- /wp:paragraph -->
-                <!-- wp:paragraph --><p><strong>Tax Savings:</strong> %s | <strong>Medical Patient Rate:</strong> %s</p><!-- /wp:paragraph -->
-                <!-- wp:paragraph --><p><strong>Dispensary Availability:</strong> %s</p><!-- /wp:paragraph -->
-                [online_mmj_app city="%s"]',
-                esc_html($ct['subheading']),
-                esc_html($ct['address']),
-                esc_html($ct['cityName']),
-                esc_html($ct['zip']),
-                esc_html($ct['localPhone']),
-                esc_html($ct['taxSavings']),
-                esc_html($ct['medTax']),
-                esc_html($ct['dispensaries']),
-                esc_attr($slug)
-            );
-            $page_data = array(
-                'post_title'   => sanitize_text_field($title),
-                'post_name'    => sanitize_title($slug),
-                'post_content' => $content,
-                'post_status'  => 'publish',
-                'post_type'    => 'page',
-            );
-            if ($existing_id && $force) {
-                $page_data['ID'] = $existing_id;
-                wp_update_post($page_data);
-                $pid = $existing_id;
-            } else {
-                $pid = wp_insert_post($page_data);
-            }
-            if ($pid && !is_wp_error($pid)) {
-                update_post_meta($pid, '_wp_page_template', 'template-location.php');
-                update_post_meta($pid, '_yoast_wpseo_title', $ct['cityName'] . ' Medical Marijuana Card Online | ' . $ct['stateCode'] . ' 420 Doctor');
-                update_post_meta($pid, '_seo_title', $ct['cityName'] . ' Medical Marijuana Card Online | ' . $ct['stateCode'] . ' 420 Doctor');
-                update_post_meta($pid, '_yoast_wpseo_metadesc', $ct['subheading']);
-                update_post_meta($pid, '_meta_description', $ct['subheading']);
-                $created_pages[] = $ct['cityName'] . ', ' . $ct['stateCode'] . ' (/' . $slug . '/)';
+            $pid = wp_insert_post($page_data);
+        }
+
+        if ($pid && !is_wp_error($pid)) {
+            update_post_meta($pid, '_wp_page_template', 'template-location.php');
+            update_post_meta($pid, '_mmj_city_name', $ct['cityName']);
+            update_post_meta($pid, '_mmj_state_name', $ct['stateName']);
+            update_post_meta($pid, '_mmj_state_code', $ct['stateCode']);
+            update_post_meta($pid, '_mmj_consult_price', $ct['price']);
+            update_post_meta($pid, '_mmj_local_phone', $ct['localPhone']);
+            update_post_meta($pid, '_yoast_wpseo_title', $title);
+            update_post_meta($pid, '_seo_title', $title);
+            update_post_meta($pid, '_yoast_wpseo_metadesc', $ct['subheading']);
+            update_post_meta($pid, '_meta_description', $ct['subheading']);
+            if (!$target_id || $force) {
+                $created_pages[] = $ct['cityName'] . ', ' . $ct['stateCode'] . ' (/' . $canonical_slug . '/)';
             }
         }
     }
 
-    // 5. Qualifying Condition Landing Pages (All 12 Medical Conditions)
+    // 5. Qualifying Condition Landing Pages (Keyword Slugs: medical-marijuana-for-{condition})
     $conditions = online_mmj_get_default_conditions();
     foreach ($conditions as $slug => $cd) {
         $existing_id = online_mmj_get_page_by_slug($slug);
         if ($existing_id && !$force) {
             $existing_pages[] = $cd['title'] . ' (/' . $slug . '/)';
         } else {
-            $content = sprintf(
-                '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->
-                <!-- wp:paragraph --><p>State medical cannabis programs authorize board-certified physicians to recommend medical marijuana for qualifying patients experiencing %s. Schedule an evaluation today.</p><!-- /wp:paragraph -->
-                [online_mmj_app condition="%s"]',
-                esc_html($cd['desc']),
-                esc_html($cd['title']),
-                esc_attr($cd['id'])
-            );
+            $content = online_mmj_generate_condition_html($slug, $cd);
             $page_data = array(
                 'post_title'   => sanitize_text_field($cd['title']),
                 'post_name'    => sanitize_title($slug),
@@ -1450,7 +2142,7 @@ function online_mmj_sync_all_core_pages($force = false) {
                 'post_type'    => 'post',
             );
             if ($existing_post_id && $force) {
-                $page_data['ID'] = $existing_post_id;
+                $post_data['ID'] = $existing_post_id;
                 wp_update_post($post_data);
                 $pid = $existing_post_id;
             } else {
@@ -1458,13 +2150,7 @@ function online_mmj_sync_all_core_pages($force = false) {
             }
             if ($pid && !is_wp_error($pid)) {
                 if (!empty($post_item['category'])) {
-                    $cat_term = term_exists($post_item['category'], 'category');
-                    if (!$cat_term) {
-                        $cat_term = wp_insert_term($post_item['category'], 'category');
-                    }
-                    if (!is_wp_error($cat_term) && isset($cat_term['term_id'])) {
-                        wp_set_post_categories($pid, array($cat_term['term_id']));
-                    }
+                    wp_set_object_terms($pid, $post_item['category'], 'category');
                 }
                 update_post_meta($pid, '_yoast_wpseo_title', $post_item['title']);
                 update_post_meta($pid, '_seo_title', $post_item['title']);
@@ -1475,8 +2161,7 @@ function online_mmj_sync_all_core_pages($force = false) {
         }
     }
 
-    // Mark synchronization complete in WordPress options
-    update_option('online_mmj_core_pages_synced_v3', 'yes');
+    update_option('online_mmj_core_pages_synced_v5_full_design', 'yes');
     update_option('online_mmj_last_sync_timestamp', current_time('mysql'));
 
     return array(
@@ -1488,7 +2173,7 @@ function online_mmj_sync_all_core_pages($force = false) {
 // Automatically sync on admin_init if not previously run
 add_action('admin_init', 'online_mmj_auto_sync_on_init');
 function online_mmj_auto_sync_on_init() {
-    if (get_option('online_mmj_core_pages_synced_v3') !== 'yes') {
+    if (get_option('online_mmj_core_pages_synced_v5_full_design') !== 'yes') {
         online_mmj_sync_all_core_pages(false);
     }
 }

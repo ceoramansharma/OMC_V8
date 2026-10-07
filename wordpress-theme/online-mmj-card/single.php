@@ -11,7 +11,6 @@
 get_header();
 ?>
 
-<div id="online-mmj-card-root">
 <main id="main-content" class="site-main py-10 sm:py-14">
   <div class="mmj-container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
     <?php
@@ -89,7 +88,6 @@ get_header();
     ?>
   </div>
 </main>
-</div>
 
 <?php
 get_footer();

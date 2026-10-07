@@ -435,8 +435,17 @@ function online_mmj_card_enqueue_assets() {
                         '2.1.0'
                     );
                 }
-                // Enqueue compiled JS bundle
-                if (preg_match('/^index-.*\.js$/', $file)) {
+                // Check if builder or editor is active
+                $is_builder_active = is_admin() ||
+                    isset($_GET['elementor-preview']) ||
+                    (isset($_GET['action']) && $_GET['action'] === 'elementor') ||
+                    (class_exists('\Elementor\Plugin') && (\Elementor\Plugin::$instance->editor->is_edit_mode() || \Elementor\Plugin::$instance->preview->is_preview_mode())) ||
+                    isset($_GET['et_fb']) ||
+                    (function_exists('et_core_is_fb_enabled') && et_core_is_fb_enabled()) ||
+                    is_customize_preview();
+
+                // Enqueue compiled JS bundle only when builder is not editing
+                if (preg_match('/^index-.*\.js$/', $file) && !$is_builder_active) {
                     wp_enqueue_script(
                         'online-mmj-card-compiled-js',
                         $assets_url . $file,
@@ -880,11 +889,40 @@ if (!function_exists('online_mmj_is_valid_app_route')) {
 
 if (!function_exists('online_mmj_handle_virtual_app_routes')) {
     function online_mmj_handle_virtual_app_routes() {
-        if (is_404()) {
-            $raw_path = isset($_SERVER['REQUEST_URI']) ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : '';
-            $path = trim($raw_path, '/');
-            if (empty($path)) return;
+        $raw_path = isset($_SERVER['REQUEST_URI']) ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : '';
+        $path = trim($raw_path, '/');
+        if (empty($path)) return;
 
+        // Canonical 301 Redirects: Ensure only keyword URLs are indexed and visited
+        $short_cities = array(
+            'los-angeles', 'san-diego', 'san-francisco', 'sacramento', 'san-jose', 'fresno', 'oakland',
+            'bakersfield', 'anaheim', 'riverside', 'stockton', 'irvine', 'chula-vista', 'fremont',
+            'san-bernardino', 'modesto', 'fontana', 'moreno-valley', 'glendale',
+            'miami', 'orlando', 'tampa', 'jacksonville',
+            'new-york-city', 'buffalo', 'rochester',
+            'philadelphia', 'pittsburgh',
+            'columbus', 'cleveland', 'cincinnati'
+        );
+
+        $short_states = array(
+            'california', 'new-york', 'florida', 'pennsylvania', 'ohio',
+            'oklahoma', 'massachusetts', 'illinois', 'michigan', 'arizona',
+            'connecticut', 'maryland', 'missouri', 'new-jersey', 'virginia',
+            'texas', 'georgia', 'minnesota', 'colorado', 'nevada'
+        );
+
+        $clean_city = preg_replace('/-(ca|fl|ny|pa|oh)$/i', '', $path);
+        if (in_array($path, $short_cities, true) || in_array($clean_city, $short_cities, true)) {
+            wp_redirect(home_url('/medical-marijuana-card-' . $clean_city . '/'), 301);
+            exit;
+        }
+
+        if (in_array($path, $short_states, true)) {
+            wp_redirect(home_url('/medical-marijuana-card-' . $path . '/'), 301);
+            exit;
+        }
+
+        if (is_404()) {
             if (online_mmj_is_valid_app_route($path)) {
                 global $wp_query;
                 status_header(200);
@@ -893,16 +931,7 @@ if (!function_exists('online_mmj_handle_virtual_app_routes')) {
                 // Look for direct match or variants
                 $post = online_mmj_find_post_or_page($path);
                 if (!$post) {
-                    $clean_city = preg_replace('/-(ca|fl|ny|pa|oh)$/i', '', $path);
                     $post = online_mmj_find_post_or_page($clean_city);
-                }
-                if (!$post && strpos($path, 'medical-marijuana-card-') === 0) {
-                    $target = str_replace('medical-marijuana-card-', '', $path);
-                    $post = online_mmj_find_post_or_page($target);
-                }
-                if (!$post && strpos($path, 'medical-marijuana-for-') === 0) {
-                    $target = str_replace('medical-marijuana-for-', '', $path);
-                    $post = online_mmj_find_post_or_page($target);
                 }
                 if (!$post && strpos($path, 'medical-marijuana-card-') !== 0) {
                     $post = online_mmj_find_post_or_page('medical-marijuana-card-' . $path);

@@ -152,6 +152,112 @@ $all_states_list = array(
   </div>
 </footer>
 
+<!-- Interactive Telehealth Evaluation Modal for Page Builders & Custom Layouts -->
+<div id="mmj-booking-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:999999; background:rgba(15,23,42,0.85); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px;">
+  <div style="background:#ffffff; border-radius:24px; max-width:520px; width:100%; padding:32px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35); position:relative; font-family:'Open Sans', sans-serif;">
+    <button type="button" id="mmj-close-modal-btn" style="position:absolute; top:20px; right:20px; background:#f1f5f9; border:none; width:36px; height:36px; border-radius:50%; font-size:20px; line-height:1; cursor:pointer; color:#64748b; display:flex; align-items:center; justify-content:center;">&times;</button>
+    
+    <div style="display:inline-flex; align-items:center; gap:6px; background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:11px; font-weight:800; padding:4px 12px; border-radius:9999px; text-transform:uppercase; margin-bottom:12px;">
+      &check; State Board Certified Telehealth
+    </div>
+    
+    <h3 style="font-size:22px; font-weight:900; color:#0f172a; margin:0 0 6px;">Start Your 420 Evaluation</h3>
+    <p style="font-size:13px; color:#64748b; margin:0 0 20px; line-height:1.5;">Connect with our licensed cannabis physician in 15 minutes. 100% online with money-back guarantee.</p>
+    
+    <form id="mmj-quick-intake-form" action="<?php echo esc_url(get_option('online_mmj_affiliate_url', home_url('/new-patient-medical-marijuana-card/'))); ?>" method="GET" style="display:flex; flex-direction:column; gap:12px;">
+      <div>
+        <label style="display:block; font-size:11px; font-weight:800; text-transform:uppercase; color:#475569; margin-bottom:4px;">Your Full Name</label>
+        <input type="text" name="patient_name" required placeholder="John Doe" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="display:block; font-size:11px; font-weight:800; text-transform:uppercase; color:#475569; margin-bottom:4px;">Email Address</label>
+        <input type="email" name="patient_email" required placeholder="john@example.com" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="display:block; font-size:11px; font-weight:800; text-transform:uppercase; color:#475569; margin-bottom:4px;">Phone Number</label>
+        <input type="tel" name="patient_phone" required placeholder="(555) 000-0000" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; box-sizing:border-box;">
+      </div>
+      <button type="submit" class="mmj-btn-primary" style="width:100%; margin-top:8px; padding:12px 20px; font-size:13px;">
+        Continue to Secure Doctor Video Room &rarr;
+      </button>
+      <div style="font-size:11px; color:#94a3b8; text-align:center; margin-top:4px;">
+        &lock; 256-Bit SSL Encrypted &middot; HIPAA Compliant
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Modal Handlers
+  var modal = document.getElementById('mmj-booking-modal');
+  var closeBtn = document.getElementById('mmj-close-modal-btn');
+  
+  function openModal(e) {
+    if (e) e.preventDefault();
+    if (modal) modal.style.display = 'flex';
+  }
+  
+  function closeModal() {
+    if (modal) modal.style.display = 'none';
+  }
+  
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) closeModal();
+    });
+  }
+  
+  document.addEventListener('click', function(e) {
+    var target = e.target.closest('a[href="#get-card"], .mmj-open-evaluation-btn, [data-open-modal="evaluation"]');
+    if (target) {
+      openModal(e);
+    }
+  });
+
+  // Accordion Handlers for Builder FAQs
+  document.addEventListener('click', function(e) {
+    var qBtn = e.target.closest('.mmj-faq-question');
+    if (qBtn) {
+      e.preventDefault();
+      var item = qBtn.closest('.mmj-faq-item');
+      if (item) {
+        var ans = item.querySelector('.mmj-faq-answer');
+        if (ans) {
+          var isHidden = ans.style.display === 'none' || window.getComputedStyle(ans).display === 'none';
+          ans.style.display = isHidden ? 'block' : 'none';
+          var arrow = qBtn.querySelector('.mmj-faq-arrow');
+          if (arrow) arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+      }
+    }
+  });
+
+  // Interactive Tax Calculator Slider Handler
+  document.addEventListener('input', function(e) {
+    if (e.target && e.target.classList.contains('mmj-tax-slider')) {
+      var val = parseInt(e.target.value, 10);
+      var parent = e.target.closest('.mmj-tax-calc-box');
+      if (parent) {
+        var spendDisplay = parent.querySelector('.mmj-calc-monthly-spend');
+        var recTaxDisplay = parent.querySelector('.mmj-calc-rec-tax');
+        var savingsDisplay = parent.querySelector('.mmj-calc-savings');
+        var rate = parseFloat(parent.getAttribute('data-rec-rate') || '0.30');
+        var yearlySpend = val * 12;
+        var yearlyRecTax = Math.round(yearlySpend * rate);
+        var yearlyMedTax = Math.round(yearlySpend * 0.05);
+        var netSavings = Math.round(yearlyRecTax - yearlyMedTax);
+
+        if (spendDisplay) spendDisplay.textContent = '$' + val + ' / month';
+        if (recTaxDisplay) recTaxDisplay.textContent = '$' + yearlyRecTax.toLocaleString();
+        if (savingsDisplay) savingsDisplay.textContent = '$' + netSavings.toLocaleString();
+      }
+    }
+  });
+})();
+</script>
+
 <?php
 /**
  * Critical SEO & Theme Hook:
