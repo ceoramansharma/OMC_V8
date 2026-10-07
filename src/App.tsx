@@ -69,9 +69,39 @@ import {
 import { applyDynamicRouteSchema } from './utils/schemaStore';
 import { applyThemeStyles } from './utils/themeStyles';
 
-export default function App() {
+interface AppProps {
+  isHeadlessMode?: boolean;
+}
+
+export default function App({ isHeadlessMode = false }: AppProps) {
+  // Check if headless mode or WordPress page builder canvas is active
+  const isHeadlessActive = (() => {
+    if (isHeadlessMode) return true;
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    const search = window.location.search.toLowerCase();
+    return (
+      params.get('headless-mode') === '1' ||
+      params.get('headless-mode') === 'true' ||
+      params.get('headless') === '1' ||
+      params.get('headless') === 'true' ||
+      search.includes('elementor-preview') ||
+      search.includes('et_fb=1') ||
+      search.includes('et_pb_preview=true') ||
+      document.body.classList.contains('elementor-editor-active') ||
+      document.body.classList.contains('et-fb') ||
+      document.body.classList.contains('wp-admin')
+    );
+  })();
+
+  // If in headless-mode or page-builder canvas mode, safely render empty null/portal to prevent any clashing
+  if (isHeadlessActive) {
+    return null;
+  }
+
   const [currentRoute, setCurrentRoute] = useState<AppRoute>({ type: 'home' });
   const { toggles } = useSectionToggles();
+
 
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
