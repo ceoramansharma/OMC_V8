@@ -96,7 +96,7 @@ export default function App({ isHeadlessMode = false }: AppProps) {
     );
   })();
 
-  const [currentRoute, setCurrentRoute] = useState<AppRoute>({ type: 'home' });
+  const [currentRoute, setCurrentRoute] = useState<AppRoute>(() => parseCurrentUrl());
   const { toggles } = useSectionToggles();
   const [liveSyncToast, setLiveSyncToast] = useState<{ message: string; timestamp: number } | null>(null);
 

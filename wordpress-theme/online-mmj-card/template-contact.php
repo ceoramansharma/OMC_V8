@@ -11,8 +11,21 @@
  */
 
 get_header();
-?>
 
+$is_builder = function_exists('online_mmj_is_builder_active') ? online_mmj_is_builder_active(get_the_ID()) : false;
+
+if ($is_builder) : ?>
+<main id="main-content" class="site-main contact-template-container" style="width:100%; min-height:70vh; padding:0; margin:0;">
+    <?php
+    if (have_posts()) :
+        while (have_posts()) :
+            the_post();
+            the_content();
+        endwhile;
+    endif;
+    ?>
+</main>
+<?php else : ?>
 <main id="main-content" class="site-main contact-template-container" style="width:100%; min-height:70vh; padding:0; margin:0;">
     <!-- Interactive React Mount for Contact Desk -->
     <div id="online-mmj-card-root">
@@ -51,6 +64,7 @@ get_header();
         ?>
     </div>
 </main>
+<?php endif; ?>
 
 <?php
 get_footer();

@@ -355,44 +355,23 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* ABOUT */}
-            <a href="#why-trust" className="hover:text-[#16a34a] transition-colors">
-              ABOUT
-            </a>
-
-            {/* CONTACT US */}
-            <button
-              onClick={() => {
-                if (onNavigateContact) {
-                  onNavigateContact();
-                } else if (onOpenContact) {
-                  onOpenContact();
-                } else {
-                  safeNavigate('/contact-us/');
+            {/* About Our Clinic & Physicians */}
+            <a 
+              href="#why-trust" 
+              onClick={(e) => {
+                if (window.location.pathname !== '/' && onNavigateHome) {
+                  e.preventDefault();
+                  onNavigateHome();
+                  setTimeout(() => {
+                    const el = document.getElementById('why-trust');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }, 150);
                 }
               }}
-              className="hover:text-[#16a34a] transition-colors cursor-pointer uppercase font-bold"
+              className="hover:text-[#16a34a] transition-colors py-2 whitespace-nowrap"
             >
-              CONTACT US
-            </button>
-
-            {/* Dynamically Linked WordPress Pages */}
-            {navPages.map((page) => (
-              <button
-                key={page.id}
-                onClick={() => {
-                  if (onNavigateCustomPage) {
-                    onNavigateCustomPage(page.slug);
-                  } else {
-                    safeNavigate(`/${page.slug}/`);
-                  }
-                }}
-                className="hover:text-[#16a34a] transition-colors cursor-pointer uppercase font-bold text-[13px] tracking-wide"
-                title={page.title}
-              >
-                {page.title}
-              </button>
-            ))}
+              About Our Clinic & Physicians
+            </a>
 
             {/* SELECT STATE DROPDOWN */}
             <div 

@@ -9,8 +9,10 @@
  */
 
 get_header();
-?>
 
+$is_builder = function_exists('online_mmj_is_builder_active') ? online_mmj_is_builder_active(get_the_ID()) : false;
+
+if ($is_builder) : ?>
 <main id="main-content" class="site-main py-10 sm:py-14">
   <div class="mmj-container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
     <?php
@@ -88,6 +90,36 @@ get_header();
     ?>
   </div>
 </main>
+<?php else : ?>
+  <!-- Interactive Telehealth Mount for Full Responsive React SPA -->
+  <div id="online-mmj-card-root">
+    <noscript>
+      <main id="main-content" class="site-main py-10 sm:py-14">
+        <div class="mmj-container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <?php
+          while (have_posts()) :
+            the_post();
+            ?>
+            <article id="post-<?php the_ID(); ?>" <?php post_class('single-article'); ?>>
+              <header class="entry-header mb-8 pb-4 border-b border-slate-100">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4">
+                  <?php the_title(); ?>
+                </h1>
+              </header>
+              <div class="entry-content prose prose-slate max-w-none text-slate-700 leading-relaxed space-y-4">
+                <?php
+                the_content();
+                ?>
+              </div>
+            </article>
+            <?php
+          endwhile;
+          ?>
+        </div>
+      </main>
+    </noscript>
+  </div>
+<?php endif; ?>
 
 <?php
 get_footer();

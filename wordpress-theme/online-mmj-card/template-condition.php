@@ -30,46 +30,86 @@ $category        = get_post_meta(get_the_ID(), '_mmj_condition_category', true) 
 }
 </script>
 
-<!-- Breadcrumb Navigation for SEO Hierarchy -->
-<div class="bg-slate-50 border-b border-slate-200 py-3 text-xs text-slate-500">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <?php online_mmj_breadcrumbs(); ?>
-  </div>
-</div>
+<?php
+$is_builder = function_exists('online_mmj_is_builder_active') ? online_mmj_is_builder_active(get_the_ID()) : false;
 
-<main id="main-content" class="site-main condition-guide-template py-8">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-    <?php
-    // Standard WordPress loop executing the_content() for Page Builders & Gutenberg
-    while (have_posts()) :
-      the_post();
-      $content = get_the_content();
+if ($is_builder) : ?>
+  <!-- Breadcrumb Navigation for SEO Hierarchy in Page Builder -->
+  <div class="bg-slate-50 border-b border-slate-200 py-3 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <?php online_mmj_breadcrumbs(); ?>
+    </div>
+  </div>
+
+  <main id="main-content" class="site-main condition-guide-template py-8">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <?php
+      while (have_posts()) :
+        the_post();
+        $content = get_the_content();
+        ?>
+        <article id="post-<?php the_ID(); ?>" <?php post_class('entry-condition-page'); ?>>
+          <div class="entry-content">
+            <?php 
+            if (!empty(trim($content))) {
+                the_content();
+            } elseif (function_exists('online_mmj_get_condition_fallback_html')) {
+                echo online_mmj_get_condition_fallback_html(get_the_ID());
+            } else {
+                the_content();
+            }
+            ?>
+          </div>
+
+          <?php
+          wp_link_pages(array(
+            'before' => '<div class="page-links text-center py-4 font-bold">' . esc_html__('Pages:', 'online-mmj-card'),
+            'after'  => '</div>',
+          ));
+          ?>
+        </article>
+        <?php
+      endwhile;
       ?>
-      <article id="post-<?php the_ID(); ?>" <?php post_class('entry-condition-page'); ?>>
-        <div class="entry-content">
-          <?php 
-          if (!empty(trim($content))) {
-              the_content();
-          } elseif (function_exists('online_mmj_get_condition_fallback_html')) {
-              echo online_mmj_get_condition_fallback_html(get_the_ID());
-          } else {
-              the_content();
-          }
+    </div>
+  </main>
+<?php else : ?>
+  <!-- Interactive Telehealth Mount for Full Responsive React SPA -->
+  <div id="online-mmj-card-root">
+    <noscript>
+      <div class="bg-slate-50 border-b border-slate-200 py-3 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <?php online_mmj_breadcrumbs(); ?>
+        </div>
+      </div>
+      <main id="main-content" class="site-main condition-guide-template py-8">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <?php
+          while (have_posts()) :
+            the_post();
+            $content = get_the_content();
+            ?>
+            <article id="post-<?php the_ID(); ?>" <?php post_class('entry-condition-page'); ?>>
+              <div class="entry-content">
+                <?php 
+                if (!empty(trim($content))) {
+                    the_content();
+                } elseif (function_exists('online_mmj_get_condition_fallback_html')) {
+                    echo online_mmj_get_condition_fallback_html(get_the_ID());
+                } else {
+                    the_content();
+                }
+                ?>
+              </div>
+            </article>
+            <?php
+          endwhile;
           ?>
         </div>
-
-        <?php
-        wp_link_pages(array(
-          'before' => '<div class="page-links text-center py-4 font-bold">' . esc_html__('Pages:', 'online-mmj-card'),
-          'after'  => '</div>',
-        ));
-        ?>
-      </article>
-      <?php
-    endwhile;
-    ?>
+      </main>
+    </noscript>
   </div>
-</main>
+<?php endif; ?>
 
 <?php
 get_footer();

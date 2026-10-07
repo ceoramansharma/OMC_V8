@@ -50,13 +50,37 @@ export function checkIsPageBuilderOrHeadlessMode(): boolean {
 
 const isHeadlessOrBuilder = checkIsPageBuilderOrHeadlessMode();
 
-const container = document.getElementById('online-mmj-card-root') || document.getElementById('root');
-if (container) {
-  if (!isHeadlessOrBuilder) {
-    // When React mounts in full SPA mode, add marker class to body so fallback PHP header/footer are cleanly suppressed via CSS
-    document.body.classList.add('online-mmj-spa-active');
+let container = document.getElementById('online-mmj-card-root') || document.getElementById('root');
+
+// If running in standard visitor mode (not in a page builder editor)
+if (!isHeadlessOrBuilder) {
+  document.body.classList.add('online-mmj-spa-active');
+
+  // If container does not exist on this page template yet, create it on body
+  if (!container && typeof document !== 'undefined') {
+    container = document.createElement('div');
+    container.id = 'online-mmj-card-root';
+    document.body.appendChild(container);
   }
 
+  // If container is nested within WordPress template markup (e.g. .entry-content, article, main),
+  // suppress any stray static fallback sibling elements and text nodes so they don't break the layout.
+  if (container && container.parentElement && container.parentElement !== document.body) {
+    const parent = container.parentElement;
+    for (const child of Array.from(parent.children)) {
+      if (child !== container && !child.contains(container)) {
+        (child as HTMLElement).style.display = 'none';
+      }
+    }
+    for (const node of Array.from(parent.childNodes)) {
+      if (node !== container && node.nodeType === Node.TEXT_NODE) {
+        node.textContent = '';
+      }
+    }
+  }
+}
+
+if (container) {
   createRoot(container).render(<App isHeadlessMode={isHeadlessOrBuilder} />);
 }
 

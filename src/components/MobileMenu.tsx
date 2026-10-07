@@ -444,7 +444,28 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               </div>
             )}
 
-            {/* 6. Contact Us Support Desk */}
+            {/* About Our Clinic & Physicians */}
+            <a
+              href="#why-trust"
+              onClick={() => handleAction(() => {
+                if (window.location.pathname !== '/' && onNavigateHome) {
+                  onNavigateHome();
+                  setTimeout(() => {
+                    const el = document.getElementById('why-trust');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }, 150);
+                }
+              })}
+              className="w-full px-4 py-3 bg-slate-50 rounded-xl flex items-center justify-between text-left text-slate-900 font-extrabold uppercase tracking-wide hover:bg-slate-100 transition-colors border border-slate-200"
+            >
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#16a34a]" />
+                <span>About Our Clinic &amp; Physicians</span>
+              </span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </a>
+
+            {/* Contact Us Support Desk */}
             <button
               onClick={() => handleAction(() => onNavigateContact ? onNavigateContact() : onOpenContact ? onOpenContact() : undefined)}
               className="w-full px-4 py-3 bg-slate-50 rounded-xl flex items-center justify-between text-left text-slate-900 font-extrabold uppercase tracking-wide hover:bg-slate-100 transition-colors border border-slate-200"

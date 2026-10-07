@@ -12,8 +12,10 @@
  */
 
 get_header();
-?>
 
+$is_builder = function_exists('online_mmj_is_builder_active') ? online_mmj_is_builder_active(get_the_ID()) : false;
+
+if ($is_builder) : ?>
 <main id="main-content" class="site-main page-builder-fullwidth-canvas" style="width:100%; min-height:60vh; padding:0; margin:0;">
     <?php
     // Standard WordPress loop executing the_content() for Page Builders
@@ -29,6 +31,21 @@ get_header();
     endwhile;
     ?>
 </main>
+<?php else : ?>
+  <!-- Interactive Telehealth Mount for Full Responsive React SPA -->
+  <div id="online-mmj-card-root">
+    <noscript>
+      <main id="main-content" class="site-main page-builder-fullwidth-canvas" style="width:100%; min-height:60vh; padding:0; margin:0;">
+        <?php
+        while (have_posts()) :
+          the_post();
+          the_content();
+        endwhile;
+        ?>
+      </main>
+    </noscript>
+  </div>
+<?php endif; ?>
 
 <?php
 get_footer();

@@ -9,8 +9,10 @@
  */
 
 get_header();
-?>
 
+$is_builder = function_exists('online_mmj_is_builder_active') ? online_mmj_is_builder_active() : false;
+
+if ($is_builder) : ?>
 <main id="main-content" class="site-main py-10 sm:py-14">
   <div class="mmj-container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     
@@ -97,6 +99,41 @@ get_header();
 
   </div>
 </main>
+<?php else : ?>
+  <!-- Interactive Telehealth Mount for Full Responsive React SPA -->
+  <div id="online-mmj-card-root">
+    <noscript>
+      <main id="main-content" class="site-main py-10 sm:py-14">
+        <div class="mmj-container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <header class="page-header mb-10 pb-4 border-b border-slate-200">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              <?php esc_html_e('Medical Cannabis Knowledge Hub & Clinical Guides', 'online-mmj-card'); ?>
+            </h1>
+          </header>
+          <?php if (have_posts()) : ?>
+            <div class="posts-grid grid md:grid-cols-2 gap-8">
+              <?php
+              while (have_posts()) :
+                the_post();
+                ?>
+                <article id="post-<?php the_ID(); ?>" <?php post_class('p-6 bg-white border border-slate-200 rounded-3xl shadow-xs'); ?>>
+                  <h2 class="text-xl font-bold text-slate-900 mb-2">
+                    <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+                  </h2>
+                  <div class="text-xs text-slate-600 line-clamp-3 mb-4">
+                    <?php the_excerpt(); ?>
+                  </div>
+                </article>
+                <?php
+              endwhile;
+              ?>
+            </div>
+          <?php endif; ?>
+        </div>
+      </main>
+    </noscript>
+  </div>
+<?php endif; ?>
 
 <?php
 get_footer();

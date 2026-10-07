@@ -206,17 +206,38 @@ a:hover {
   width: 100%;
 }
 
-/* Prevent duplicate static WordPress PHP header, banner, progress bar, or footer ONLY when React SPA is actively mounted on pure front page */
+/* Prevent duplicate static WordPress PHP header, banner, progress bar, breadcrumbs, or footer when React SPA is mounted */
 body.online-mmj-spa-active > .online-mmj-static-progress,
 body.online-mmj-spa-active > .online-mmj-static-banner,
 body.online-mmj-spa-active > .online-mmj-static-header,
 body.online-mmj-spa-active > .online-mmj-static-footer,
 body.online-mmj-spa-active > .mmj-breadcrumbs,
+body.online-mmj-spa-active .mmj-breadcrumbs,
 body.online-mmj-spa-active > header.site-header,
 body.online-mmj-spa-active > header.online-mmj-header,
 body.online-mmj-spa-active > footer.site-footer,
-body.online-mmj-spa-active #mmj-scroll-progress {
+body.online-mmj-spa-active #mmj-scroll-progress,
+body.online-mmj-spa-active > div.bg-slate-50:not(#online-mmj-card-root) {
   display: none !important;
+}
+
+/* Hide any static sibling elements around #online-mmj-card-root inside WordPress templates */
+body.online-mmj-spa-active main > *:not(#online-mmj-card-root):not(:has(#online-mmj-card-root)),
+body.online-mmj-spa-active article > *:not(#online-mmj-card-root):not(:has(#online-mmj-card-root)),
+body.online-mmj-spa-active .entry-content > *:not(#online-mmj-card-root):not(:has(#online-mmj-card-root)) {
+  display: none !important;
+}
+
+/* Zero out padding and constraints when mounting React inside WordPress template containers */
+body.online-mmj-spa-active main,
+body.online-mmj-spa-active article,
+body.online-mmj-spa-active .entry-content {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 noscript .online-mmj-static-banner,

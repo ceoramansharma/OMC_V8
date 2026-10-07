@@ -396,6 +396,24 @@ function online_mmj_register_widgets() {
 add_action('widgets_init', 'online_mmj_register_widgets');
 
 /**
+ * Helper to check if a visual page builder or editor is actively editing or previewing
+ */
+if (!function_exists('online_mmj_is_builder_active')) {
+    function online_mmj_is_builder_active($post_id = 0) {
+        if (is_admin()) return true;
+        if (isset($_GET['elementor-preview']) || (isset($_GET['action']) && $_GET['action'] === 'elementor')) return true;
+        if (class_exists('\Elementor\Plugin') && (\Elementor\Plugin::$instance->editor->is_edit_mode() || \Elementor\Plugin::$instance->preview->is_preview_mode())) return true;
+        if (isset($_GET['et_fb']) || (function_exists('et_core_is_fb_enabled') && et_core_is_fb_enabled())) return true;
+        if (is_customize_preview()) return true;
+        if ($post_id) {
+            if (get_post_meta($post_id, '_elementor_edit_mode', true) === 'builder') return true;
+            if (get_post_meta($post_id, '_et_pb_use_builder', true) === 'on') return true;
+        }
+        return false;
+    }
+}
+
+/**
  * Enqueue scripts and styles.
  */
 function online_mmj_card_enqueue_assets() {
@@ -436,13 +454,7 @@ function online_mmj_card_enqueue_assets() {
                     );
                 }
                 // Check if builder or editor is active
-                $is_builder_active = is_admin() ||
-                    isset($_GET['elementor-preview']) ||
-                    (isset($_GET['action']) && $_GET['action'] === 'elementor') ||
-                    (class_exists('\Elementor\Plugin') && (\Elementor\Plugin::$instance->editor->is_edit_mode() || \Elementor\Plugin::$instance->preview->is_preview_mode())) ||
-                    isset($_GET['et_fb']) ||
-                    (function_exists('et_core_is_fb_enabled') && et_core_is_fb_enabled()) ||
-                    is_customize_preview();
+                $is_builder_active = online_mmj_is_builder_active();
 
                 // Enqueue compiled JS bundle only when builder is not editing
                 if (preg_match('/^index-.*\.js$/', $file) && !$is_builder_active) {

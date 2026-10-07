@@ -200,12 +200,10 @@
         } else {
             ?>
             <ul class="flex items-center gap-6 text-xs font-bold text-slate-700">
-              <li><a href="<?php echo esc_url(home_url('/#locations-we-serve')); ?>" class="hover:text-[#16a34a] transition-colors">MMJ States</a></li>
-              <li><a href="<?php echo esc_url(home_url('/#qualifying-conditions')); ?>" class="hover:text-[#16a34a] transition-colors">Conditions</a></li>
-              <li><a href="<?php echo esc_url(home_url('/medical-marijuana-card-renewal/')); ?>" class="hover:text-[#16a34a] transition-colors">Renewal</a></li>
-              <li><a href="<?php echo esc_url(home_url('/blog/')); ?>" class="hover:text-[#16a34a] transition-colors">Resources</a></li>
-              <li><a href="<?php echo esc_url(home_url('/#why-trust')); ?>" class="hover:text-[#16a34a] transition-colors">About</a></li>
-              <li><a href="<?php echo esc_url(home_url('/contact-us/')); ?>" class="hover:text-[#16a34a] transition-colors">Contact Us</a></li>
+              <li><a href="<?php echo esc_url(home_url('/#services')); ?>" class="hover:text-[#16a34a] transition-colors">GET MY CARD</a></li>
+              <li><a href="<?php echo esc_url(home_url('/medical-marijuana-insights/')); ?>" class="hover:text-[#16a34a] transition-colors">RESOURCES</a></li>
+              <li><a href="<?php echo esc_url(home_url('/#why-trust')); ?>" class="hover:text-[#16a34a] transition-colors">About Our Clinic &amp; Physicians</a></li>
+              <li><a href="<?php echo esc_url(home_url('/#states-directory')); ?>" class="hover:text-[#16a34a] transition-colors">SELECT STATE</a></li>
             </ul>
             <?php
         }
